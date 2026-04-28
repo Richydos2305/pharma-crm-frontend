@@ -40,10 +40,19 @@ const DEFAULT_VALUES: PatientFormValues = {
   appointmentDate: '',
   notes: '',
   prescriptions: [],
-  customFields: [],
+  customFields: []
 };
 
-export function PatientForm({ initialValues, onSubmit, onCancel, submitLabel, loading, error, pharmacists = [], isUpdate = false }: PatientFormProps) {
+export function PatientForm({
+  initialValues,
+  onSubmit,
+  onCancel,
+  submitLabel,
+  loading,
+  error,
+  pharmacists = [],
+  isUpdate = false
+}: PatientFormProps) {
   const [values, setValues] = useState<PatientFormValues>({ ...DEFAULT_VALUES, ...initialValues });
   const rxContainerRef = useRef<HTMLDivElement>(null);
   const shouldFocusLastRx = useRef(false);
@@ -67,14 +76,14 @@ export function PatientForm({ initialValues, onSubmit, onCancel, submitLabel, lo
     shouldFocusLastRx.current = true;
     setValues((v) => ({
       ...v,
-      prescriptions: [...v.prescriptions, { text: '' }],
+      prescriptions: [...v.prescriptions, { text: '' }]
     }));
   }
 
   function updateRxText(index: number, text: string) {
     setValues((v) => ({
       ...v,
-      prescriptions: v.prescriptions.map((rx, i) => (i === index ? { text } : rx)),
+      prescriptions: v.prescriptions.map((rx, i) => (i === index ? { text } : rx))
     }));
   }
 
@@ -87,14 +96,14 @@ export function PatientForm({ initialValues, onSubmit, onCancel, submitLabel, lo
     const id = `cf_${Date.now()}`;
     setValues((v) => ({
       ...v,
-      customFields: [...v.customFields, { id, name: '', type: 'text', value: '' }],
+      customFields: [...v.customFields, { id, name: '', type: 'text', value: '' }]
     }));
   }
 
   function updateCustomField(id: string, patch: Partial<CustomFieldEntry>) {
     setValues((v) => ({
       ...v,
-      customFields: v.customFields.map((f) => (f.id === id ? { ...f, ...patch } : f)),
+      customFields: v.customFields.map((f) => (f.id === id ? { ...f, ...patch } : f))
     }));
   }
 
@@ -115,12 +124,16 @@ export function PatientForm({ initialValues, onSubmit, onCancel, submitLabel, lo
       <div className="card form-section">
         <div className="card-header">
           <h3>Personal Information</h3>
-          <button type="button" className="add-field-btn" onClick={addCustomField}>+ Add Custom Field</button>
+          <button type="button" className="add-field-btn" onClick={addCustomField}>
+            + Add Custom Field
+          </button>
         </div>
         <div className="card-body">
           <div className="form-grid-2">
             <div className="form-group" style={{ margin: 0 }}>
-              <label className="form-label" htmlFor="fullName">Full Name</label>
+              <label className="form-label" htmlFor="fullName">
+                Full Name
+              </label>
               <input
                 id="fullName"
                 className="form-input"
@@ -132,20 +145,25 @@ export function PatientForm({ initialValues, onSubmit, onCancel, submitLabel, lo
               />
             </div>
             <div className="form-group" style={{ margin: 0 }}>
-              <label className="form-label" htmlFor="age">Age</label>
+              <label className="form-label" htmlFor="age">
+                Age
+              </label>
               <input
                 id="age"
                 className="form-input"
                 type="number"
-                placeholder="e.g. 47"
+                placeholder="e.g. 0.5 (6 months), 5, 47"
                 min={0}
+                step={0.1}
                 value={values.age}
                 onChange={(e) => set('age', e.target.value)}
                 required
               />
             </div>
             <div className="form-group" style={{ margin: 0 }}>
-              <label className="form-label" htmlFor="phone">Phone Number</label>
+              <label className="form-label" htmlFor="phone">
+                Phone Number
+              </label>
               <input
                 id="phone"
                 className="form-input"
@@ -156,7 +174,9 @@ export function PatientForm({ initialValues, onSubmit, onCancel, submitLabel, lo
               />
             </div>
             <div className="form-group" style={{ margin: 0 }}>
-              <label className="form-label" htmlFor="address">Home Address</label>
+              <label className="form-label" htmlFor="address">
+                Home Address
+              </label>
               <input
                 id="address"
                 className="form-input"
@@ -170,13 +190,15 @@ export function PatientForm({ initialValues, onSubmit, onCancel, submitLabel, lo
 
           {/* Attended To By */}
           <div className="form-group" style={{ margin: '8px 0 0' }}>
-            <label className="form-label" htmlFor="pharmacistName">Attended To By</label>
+            <label className="form-label" htmlFor="pharmacistName">
+              Attended To By
+            </label>
             {isUpdate ? (
               <div className="locked-input">
                 <span>{values.pharmacistName || '—'}</span>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                 </svg>
               </div>
             ) : (
@@ -188,7 +210,9 @@ export function PatientForm({ initialValues, onSubmit, onCancel, submitLabel, lo
               >
                 <option value="">Select pharmacist...</option>
                 {pharmacists.map((p) => (
-                  <option key={p.id} value={p.name}>{p.name}</option>
+                  <option key={p.id} value={p.name}>
+                    {p.name}
+                  </option>
                 ))}
               </select>
             )}
@@ -224,17 +248,13 @@ export function PatientForm({ initialValues, onSubmit, onCancel, submitLabel, lo
                         <option value="textarea">Textarea</option>
                       </select>
                     </div>
-                    <button
-                      type="button"
-                      className="custom-field-delete"
-                      onClick={() => removeCustomField(cf.id)}
-                      aria-label="Remove field"
-                    >
+                    <button type="button" className="custom-field-delete" onClick={() => removeCustomField(cf.id)} aria-label="Remove field">
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <polyline points="3 6 5 6 21 6"/>
-                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                        <path d="M10 11v6"/><path d="M14 11v6"/>
-                        <path d="M9 6V4h6v2"/>
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                        <path d="M10 11v6" />
+                        <path d="M14 11v6" />
+                        <path d="M9 6V4h6v2" />
                       </svg>
                     </button>
                   </div>
@@ -268,11 +288,15 @@ export function PatientForm({ initialValues, onSubmit, onCancel, submitLabel, lo
       <div className="card form-section">
         <div className="card-header">
           <h3>Medical Information</h3>
-          <button type="button" className="add-field-btn" onClick={addCustomField}>+ Add Custom Field</button>
+          <button type="button" className="add-field-btn" onClick={addCustomField}>
+            + Add Custom Field
+          </button>
         </div>
         <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div className="form-group" style={{ margin: 0 }}>
-            <label className="form-label" htmlFor="apptDate">Appointment Date</label>
+            <label className="form-label" htmlFor="apptDate">
+              Appointment Date
+            </label>
             <input
               id="apptDate"
               className="form-input"
@@ -282,7 +306,9 @@ export function PatientForm({ initialValues, onSubmit, onCancel, submitLabel, lo
             />
           </div>
           <div className="form-group" style={{ margin: 0 }}>
-            <label className="form-label" htmlFor="notes">Notes</label>
+            <label className="form-label" htmlFor="notes">
+              Notes
+            </label>
             <textarea
               id="notes"
               className="form-input"
@@ -298,23 +324,20 @@ export function PatientForm({ initialValues, onSubmit, onCancel, submitLabel, lo
       <div className="card form-section">
         <div className="card-header">
           <h3>Prescriptions</h3>
-          <button type="button" className="add-rx-btn" onClick={addRx}>+ Add Prescription</button>
+          <button type="button" className="add-rx-btn" onClick={addRx}>
+            + Add Prescription
+          </button>
         </div>
         <div ref={rxContainerRef} className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {values.prescriptions.map((rx, i) => (
             <div className="rx-section" key={i}>
               <div className="rx-label-row" style={{ justifyContent: 'flex-end' }}>
-                <button
-                  type="button"
-                  className="rx-delete-btn"
-                  onClick={() => removeRx(i)}
-                  title="Remove"
-                >
+                <button type="button" className="rx-delete-btn" onClick={() => removeRx(i)} title="Remove">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2">
-                    <polyline points="3 6 5 6 21 6"/>
-                    <path d="M19 6l-1 14H6L5 6"/>
-                    <path d="M10 11v6M14 11v6"/>
-                    <path d="M9 6V4h6v2"/>
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6l-1 14H6L5 6" />
+                    <path d="M10 11v6M14 11v6" />
+                    <path d="M9 6V4h6v2" />
                   </svg>
                 </button>
               </div>
@@ -331,10 +354,12 @@ export function PatientForm({ initialValues, onSubmit, onCancel, submitLabel, lo
 
       {/* Desktop form actions */}
       <div className="form-actions">
-        <button type="button" className="btn-ghost" onClick={onCancel}>Cancel</button>
+        <button type="button" className="btn-ghost" onClick={onCancel}>
+          Cancel
+        </button>
         <button type="submit" className="btn-save" disabled={loading}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="20 6 9 17 4 12"/>
+            <polyline points="20 6 9 17 4 12" />
           </svg>
           {loading ? 'Saving...' : submitLabel}
         </button>
@@ -342,10 +367,12 @@ export function PatientForm({ initialValues, onSubmit, onCancel, submitLabel, lo
 
       {/* Mobile form actions */}
       <div className="mobile-form-actions">
-        <button type="button" className="btn-ghost" onClick={onCancel}>Cancel</button>
+        <button type="button" className="btn-ghost" onClick={onCancel}>
+          Cancel
+        </button>
         <button type="submit" className="btn-save" disabled={loading}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="20 6 9 17 4 12"/>
+            <polyline points="20 6 9 17 4 12" />
           </svg>
           {loading ? 'Saving...' : submitLabel}
         </button>

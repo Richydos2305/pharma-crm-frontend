@@ -15,7 +15,6 @@ export interface IUser {
   primaryColor?: string;
 }
 
-
 export interface IPatient {
   id: string;
   userId: string;
