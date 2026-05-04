@@ -1,18 +1,24 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '../../api/queryKeys';
 import { getMe, updateMe } from '../../api/users';
 import { logout } from '../../api/auth';
 import { AppLayout } from '../../components/layout/AppLayout';
 
 function initials(name: string): string {
-  return name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2);
+  return name
+    .split(' ')
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
 }
 
 export function ProfilePage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { data: user, isLoading } = useQuery({ queryKey: ['me'], queryFn: getMe });
+  const { data: user, isLoading } = useQuery({ queryKey: queryKeys.me, queryFn: getMe, staleTime: Infinity, gcTime: Infinity });
 
   const [editing, setEditing] = useState(false);
   const [fullName, setFullName] = useState('');
@@ -27,13 +33,13 @@ export function ProfilePage() {
   const updateMutation = useMutation({
     mutationFn: updateMe,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['me'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.me });
       setEditing(false);
     },
     onError: (err: unknown) => {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
       setError(msg ?? 'Failed to save changes.');
-    },
+    }
   });
 
   function startEdit() {
@@ -77,7 +83,11 @@ export function ProfilePage() {
 
   async function handleSignOut() {
     const refreshToken = localStorage.getItem('refreshToken') ?? '';
-    try { await logout(refreshToken); } catch { /* ignore */ }
+    try {
+      await logout(refreshToken);
+    } catch {
+      /* ignore */
+    }
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     navigate('/login');
@@ -90,14 +100,18 @@ export function ProfilePage() {
   const mobileTopBar = (
     <div className="mobile-topbar">
       <span className="mobile-topbar-title">My Profile</span>
-      <button className="btn-save" style={{ padding: '6px 12px', fontSize: 13 }} onClick={handleSignOut}>Sign Out</button>
+      <button className="btn-save" style={{ padding: '6px 12px', fontSize: 13 }} onClick={handleSignOut}>
+        Sign Out
+      </button>
     </div>
   );
 
   if (isLoading) {
     return (
       <AppLayout mobileTopBar={mobileTopBar}>
-        <div className="spinner-wrap"><div className="spinner" /></div>
+        <div className="spinner-wrap">
+          <div className="spinner" />
+        </div>
       </AppLayout>
     );
   }
@@ -107,9 +121,7 @@ export function ProfilePage() {
       {/* Mobile header */}
       <div className="mobile-profile-header">
         <div className="avatar-lg">{userInitials}</div>
-        <div style={{ fontFamily: "'Funnel Sans', system-ui, sans-serif", fontSize: 18, fontWeight: 700 }}>
-          {user?.fullName}
-        </div>
+        <div style={{ fontFamily: "'Funnel Sans', system-ui, sans-serif", fontSize: 18, fontWeight: 700 }}>{user?.fullName}</div>
         <span className="profile-badge">{roleLabel}</span>
       </div>
 
@@ -117,9 +129,7 @@ export function ProfilePage() {
       <div className="profile-hero">
         <div className="avatar-lg">{userInitials}</div>
         <div>
-          <div style={{ fontFamily: "'Funnel Sans', system-ui, sans-serif", fontSize: 22, fontWeight: 700, marginBottom: 4 }}>
-            {user?.fullName}
-          </div>
+          <div style={{ fontFamily: "'Funnel Sans', system-ui, sans-serif", fontSize: 22, fontWeight: 700, marginBottom: 4 }}>{user?.fullName}</div>
           <span className="profile-badge">{roleLabel}</span>
         </div>
       </div>
@@ -131,18 +141,17 @@ export function ProfilePage() {
             <h3>Personal Information</h3>
             {editing ? (
               <div className="profile-edit-actions">
-                <span className="edit-link" onClick={() => setEditing(false)}>Cancel</span>
-                <button
-                  className="btn-save"
-                  style={{ padding: '6px 16px', fontSize: 13 }}
-                  onClick={handleSave}
-                  disabled={saveLoading}
-                >
+                <span className="edit-link" onClick={() => setEditing(false)}>
+                  Cancel
+                </span>
+                <button className="btn-save" style={{ padding: '6px 16px', fontSize: 13 }} onClick={handleSave} disabled={saveLoading}>
                   {saveLoading ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
             ) : (
-              <span className="edit-link" onClick={startEdit}>Edit</span>
+              <span className="edit-link" onClick={startEdit}>
+                Edit
+              </span>
             )}
           </div>
 
@@ -186,37 +195,32 @@ export function ProfilePage() {
             <h3>Pharmacy Details</h3>
             {editingPharmacy ? (
               <div className="profile-edit-actions">
-                <span className="edit-link" onClick={() => setEditingPharmacy(false)}>Cancel</span>
-                <button
-                  className="btn-save"
-                  style={{ padding: '6px 16px', fontSize: 13 }}
-                  onClick={handleSavePharmacy}
-                  disabled={saveLoading}
-                >
+                <span className="edit-link" onClick={() => setEditingPharmacy(false)}>
+                  Cancel
+                </span>
+                <button className="btn-save" style={{ padding: '6px 16px', fontSize: 13 }} onClick={handleSavePharmacy} disabled={saveLoading}>
                   {saveLoading ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
             ) : (
-              <span className="edit-link" onClick={startEditPharmacy}>Edit</span>
+              <span className="edit-link" onClick={startEditPharmacy}>
+                Edit
+              </span>
             )}
           </div>
           <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
-              <span className="field-label" style={{ display: 'block', marginBottom: 4 }}>Company Logo</span>
+              <span className="field-label" style={{ display: 'block', marginBottom: 4 }}>
+                Company Logo
+              </span>
               <div className="logo-upload-row">
-                <div className="logo-preview">
-                  {user?.companyLogo ? (
-                    <img src={user.companyLogo} alt="Logo" />
-                  ) : (
-                    companyInitials
-                  )}
-                </div>
+                <div className="logo-preview">{user?.companyLogo ? <img src={user.companyLogo} alt="Logo" /> : companyInitials}</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <button className="upload-btn" type="button" disabled style={{ opacity: 0.5, cursor: 'not-allowed' }}>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <polyline points="16 16 12 12 8 16"/>
-                      <line x1="12" y1="12" x2="12" y2="21"/>
-                      <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+                      <polyline points="16 16 12 12 8 16" />
+                      <line x1="12" y1="12" x2="12" y2="21" />
+                      <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
                     </svg>
                     Upload Logo
                   </button>

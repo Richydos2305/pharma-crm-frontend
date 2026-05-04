@@ -1,12 +1,18 @@
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { queryKeys } from '../../api/queryKeys';
 import { listPatients } from '../../api/patients';
 import { getMe } from '../../api/users';
 import { AppLayout } from '../../components/layout/AppLayout';
 import type { IPatient } from '../../types';
 
 function patientInitials(name: string): string {
-  return name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2);
+  return name
+    .split(' ')
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
 }
 
 function formatDate(dateStr: string): string {
@@ -29,15 +35,14 @@ function avatarColor(index: number): string {
 
 export function DashboardPage() {
   const navigate = useNavigate();
-  const { data: user } = useQuery({ queryKey: ['me'], queryFn: getMe });
+  const { data: user } = useQuery({ queryKey: queryKeys.me, queryFn: getMe, staleTime: Infinity, gcTime: Infinity });
   const { data: patients = [], isLoading } = useQuery({
-    queryKey: ['patients'],
-    queryFn: () => listPatients({ limit: 1000 }),
+    queryKey: queryKeys.patients.all,
+    queryFn: () => listPatients(),
+    gcTime: 15 * 60 * 1000
   });
 
-  const recentPatients = [...patients]
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 3);
+  const recentPatients = [...patients].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 3);
   const total = patients.length;
   const firstName = user?.fullName?.split(' ')[0] ?? 'there';
 
@@ -50,7 +55,9 @@ export function DashboardPage() {
 
   return (
     <AppLayout mobileTopBar={mobileTopBar}>
-      <p className="mobile-welcome">{getGreeting()}, {firstName} 👋</p>
+      <p className="mobile-welcome">
+        {getGreeting()}, {firstName} 👋
+      </p>
       <h1 className="page-title">Dashboard</h1>
 
       {/* Mobile stats */}
@@ -87,11 +94,15 @@ export function DashboardPage() {
 
       <div className="recent-header">
         <h2>Recent Patients</h2>
-        <span className="view-all-link" onClick={() => navigate('/patients')}>View all →</span>
+        <span className="view-all-link" onClick={() => navigate('/patients')}>
+          View all →
+        </span>
       </div>
 
       {isLoading ? (
-        <div className="spinner-wrap"><div className="spinner" /></div>
+        <div className="spinner-wrap">
+          <div className="spinner" />
+        </div>
       ) : recentPatients.length === 0 ? (
         <div className="empty-state">
           <p>No patients yet.</p>
@@ -112,10 +123,10 @@ export function DashboardPage() {
               {p.appointmentDates?.length > 0 && (
                 <div className="appt-row">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="3" y="4" width="18" height="18" rx="2"/>
-                    <line x1="16" y1="2" x2="16" y2="6"/>
-                    <line x1="8" y1="2" x2="8" y2="6"/>
-                    <line x1="3" y1="10" x2="21" y2="10"/>
+                    <rect x="3" y="4" width="18" height="18" rx="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
                   </svg>
                   Last appointment: {formatDate(p.appointmentDates[p.appointmentDates.length - 1])}
                 </div>
@@ -123,17 +134,17 @@ export function DashboardPage() {
               {p.pharmacistName && (
                 <div className="attended-row">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-                    <circle cx="9" cy="7" r="4"/>
-                    <polyline points="16 11 18 13 22 9"/>
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <polyline points="16 11 18 13 22 9" />
                   </svg>
                   Attended to by {p.pharmacistName}
                 </div>
               )}
               <button className="btn-outline" onClick={() => navigate(`/patients/${p.id}`)}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                  <circle cx="12" cy="12" r="3"/>
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
                 </svg>
                 View Patient
               </button>
