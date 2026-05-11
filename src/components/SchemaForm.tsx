@@ -74,10 +74,33 @@ function buildPayload(schema: FormSchema, state: FormState, isUpdate = false): C
         }
       }
     } else {
-      // Repeatable: all rows go to customFields keyed by section.id
+      // Repeatable: all rows go to customFields keyed by section.id.
+      // If a relation field (pharmacist picker) is in a repeatable section,
+      // promote the last row's value to top-level pharmacistName.
       const rows = (state[section.id] as RepeatableRow[]) ?? [];
       if (rows.length > 0) {
-        customFields[section.id] = rows.map((r) => r.values);
+        // Build a map of fieldId -> FieldSchema for this section
+        const fieldMap = Object.fromEntries(section.fields.map((f) => [f.id, f]));
+        const filteredRows = rows.map((r) => {
+          const rowValues: FieldValues = {};
+          for (const [fieldId, value] of Object.entries(r.values)) {
+            rowValues[fieldId] = value;
+            const coreKey = CORE_TOP_LEVEL[fieldId];
+            const isRelation = fieldMap[fieldId]?.type === 'relation';
+            if (coreKey || isRelation) {
+              // Promote to top-level; last row wins (e.g. pharmacistName)
+              const key = coreKey ?? 'pharmacistName';
+              if (isUpdate && key === 'pharmacistName') continue;
+              if (key === 'age') {
+                payload[key] = value ? Number(value) : 0;
+              } else if (value) {
+                payload[key] = value;
+              }
+            }
+          }
+          return rowValues;
+        });
+        customFields[section.id] = filteredRows;
       }
     }
   }
@@ -353,7 +376,7 @@ function StandardSection({
                 value={values[field.id] ?? ''}
                 onChange={(v) => onFieldChange(field.id, v)}
                 pharmacists={pharmacists}
-                disabled={isUpdate && field.id === 'core-attended-by'}
+                disabled={isUpdate && field.type === 'relation'}
               />
             )
           )}
@@ -370,15 +393,16 @@ interface RepeatableSectionProps {
   rows: RepeatableRow[];
   onRowsChange: (rows: RepeatableRow[]) => void;
   pharmacists: IPharmacist[];
+  isUpdate?: boolean;
 }
 
-function RepeatableSection({ section, rows, onRowsChange, pharmacists }: RepeatableSectionProps) {
+function RepeatableSection({ section, rows, onRowsChange, pharmacists, isUpdate = false }: RepeatableSectionProps) {
   function addRow() {
     const emptyValues: FieldValues = {};
     for (const f of section.fields) {
       if (f.type !== 'file') emptyValues[f.id] = '';
     }
-    onRowsChange([...rows, { rowId: uid(), values: emptyValues }]);
+    onRowsChange([...rows, { rowId: uid(), values: emptyValues, isNew: true }]);
   }
 
   function removeRow(rowId: string) {
@@ -423,6 +447,7 @@ function RepeatableSection({ section, rows, onRowsChange, pharmacists }: Repeata
                     value={row.values[field.id] ?? ''}
                     onChange={(v) => updateRowField(row.rowId, field.id, v)}
                     pharmacists={pharmacists}
+                    disabled={isUpdate && !row.isNew && field.type === 'relation'}
                   />
                 ))}
             </div>
@@ -537,6 +562,7 @@ export function SchemaForm({
             rows={(state[section.id] as RepeatableRow[]) ?? []}
             onRowsChange={(rows) => setRows(section.id, rows)}
             pharmacists={pharmacists}
+            isUpdate={isUpdate}
           />
         )
       )}
