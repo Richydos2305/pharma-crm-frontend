@@ -8,7 +8,7 @@ type SectionState = FieldValues | RepeatableRow[];
 
 export type FileFieldState = { existing: FileMetadata[]; pending: File[] };
 export type FileState = Record<string, FileFieldState>;
-export type RepeatableRow = { rowId: string; values: FieldValues };
+export type RepeatableRow = { rowId: string; values: FieldValues; isNew?: boolean };
 export type FormState = Record<string, SectionState>;
 
 // ─── Private helpers ──────────────────────────────────────────────────────────
@@ -74,12 +74,14 @@ export function hydrateState(schema: FormSchema, patient: IPatient): FormState {
         if (Array.isArray(newRows) && newRows.length > 0) {
           state[section.id] = (newRows as Array<Record<string, string>>).map((row) => ({
             rowId: uid(),
-            values: row
+            values: row,
+            isNew: false
           }));
         } else if (Array.isArray(patient.prescriptions) && patient.prescriptions.length > 0) {
           state[section.id] = patient.prescriptions.map((text) => ({
             rowId: uid(),
-            values: { 'core-prescription-text': text }
+            values: { 'core-prescription-text': text },
+            isNew: false
           }));
         } else {
           state[section.id] = [];
@@ -89,7 +91,8 @@ export function hydrateState(schema: FormSchema, patient: IPatient): FormState {
         if (Array.isArray(rows) && rows.length > 0) {
           state[section.id] = (rows as Array<Record<string, string>>).map((row) => ({
             rowId: uid(),
-            values: row
+            values: row,
+            isNew: false
           }));
         } else {
           state[section.id] = [];
