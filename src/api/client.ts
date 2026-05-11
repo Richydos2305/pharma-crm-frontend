@@ -16,7 +16,10 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
-// On 401, attempt token refresh once then redirect to login
+// On 401, attempt token refresh once then redirect to login.
+// A shared promise prevents concurrent requests from each triggering their own refresh.
+let refreshPromise: Promise<string> | null = null;
+
 apiClient.interceptors.response.use(
   (res) => res,
   async (error) => {
@@ -26,11 +29,21 @@ apiClient.interceptors.response.use(
       const refreshToken = localStorage.getItem('refreshToken');
       if (refreshToken) {
         try {
-          const { data } = await axios.post(`${BASE_URL}/api/auth/refresh`, { token: refreshToken });
-          const newAccessToken = data.data.accessToken;
-          const newRefreshToken = data.data.refreshToken;
-          localStorage.setItem('accessToken', newAccessToken);
-          localStorage.setItem('refreshToken', newRefreshToken);
+          if (!refreshPromise) {
+            refreshPromise = axios
+              .post(`${BASE_URL}/api/auth/refresh`, { token: refreshToken })
+              .then(({ data }) => {
+                const newAccessToken = data.data.accessToken;
+                const newRefreshToken = data.data.refreshToken;
+                localStorage.setItem('accessToken', newAccessToken);
+                localStorage.setItem('refreshToken', newRefreshToken);
+                return newAccessToken;
+              })
+              .finally(() => {
+                refreshPromise = null;
+              });
+          }
+          const newAccessToken = await refreshPromise;
           original.headers.Authorization = `Bearer ${newAccessToken}`;
           return apiClient(original);
         } catch {

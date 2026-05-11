@@ -4,5 +4,6 @@ export const queryKeys = {
     all: ['patients'] as const,
     detail: (id: string) => ['patient', id] as const
   },
-  pharmacists: ['pharmacists'] as const
+  pharmacists: ['pharmacists'] as const,
+  settings: ['settings'] as const
 };

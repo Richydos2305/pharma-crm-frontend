@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import type { IPatient, CreatePatientPayload, UpdatePatientPayload } from '../types';
+import type { IPatient, CreatePatientPayload, UpdatePatientPayload, FileMetadata } from '../types';
 
 export interface ListPatientsParams {
   search?: string;
@@ -29,4 +29,17 @@ export async function updatePatient(id: string, payload: UpdatePatientPayload): 
 
 export async function deletePatient(id: string): Promise<void> {
   await apiClient.delete(`/api/patients/${id}`);
+}
+
+export async function uploadPatientFile(patientId: string, file: File): Promise<FileMetadata> {
+  const formData = new FormData();
+  formData.append('file', file);
+  const { data } = await apiClient.post<{ data: { url: string; publicId: string } }>(`/api/files/upload/${patientId}`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+  return { url: data.data.url, publicId: data.data.publicId, name: file.name };
+}
+
+export async function deletePatientFile(publicId: string): Promise<void> {
+  await apiClient.delete(`/api/files/${encodeURIComponent(publicId)}`);
 }

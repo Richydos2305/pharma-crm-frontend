@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '../../api/queryKeys';
 import { listPatients } from '../../api/patients';
 import { listPharmacists } from '../../api/pharmacists';
+import { getMe } from '../../api/users';
 import { AppLayout } from '../../components/layout/AppLayout';
 import type { IPatient, IPharmacist } from '../../types';
 
@@ -168,10 +169,20 @@ export function PatientsPage() {
   const filterActive = ageFilter !== 'all' || lastApptFilter !== 'any' || pharmacistFilter !== '';
   const sortActive = sortKey !== 'recent';
 
+  const { data: user } = useQuery({ queryKey: queryKeys.me, queryFn: getMe, staleTime: Infinity, gcTime: Infinity });
+
   const mobileTopBar = (
     <div className="mobile-topbar">
       <span className="mobile-topbar-title">Patients</span>
-      <span className="badge-count">{patients.length} total</span>
+      <div className="mobile-topbar-avatar">
+        {user?.companyLogo ? (
+          <img src={user.companyLogo} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+        ) : user?.fullName ? (
+          patientInitials(user.fullName)
+        ) : (
+          'U'
+        )}
+      </div>
     </div>
   );
 
