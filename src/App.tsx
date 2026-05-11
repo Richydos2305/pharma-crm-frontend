@@ -11,6 +11,7 @@ import { CreatePatientPage } from './pages/patients/CreatePatientPage';
 import { UpdatePatientPage } from './pages/patients/UpdatePatientPage';
 import { ProfilePage } from './pages/profile/ProfilePage';
 import { PharmacistsPage } from './pages/pharmacists/PharmacistsPage';
+import { FormBuilderPage } from './pages/patients/FormBuilderPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -48,6 +49,14 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <CreatePatientPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/patients/form-builder"
+                element={
+                  <ProtectedRoute>
+                    <FormBuilderPage />
                   </ProtectedRoute>
                 }
               />

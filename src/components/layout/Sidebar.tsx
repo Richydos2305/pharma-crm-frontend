@@ -5,9 +5,10 @@ import { logout } from '../../api/auth';
 interface SidebarProps {
   companyName: string;
   companyInitials: string;
+  companyLogo?: string;
 }
 
-export function Sidebar({ companyName, companyInitials }: SidebarProps) {
+export function Sidebar({ companyName, companyInitials, companyLogo }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
 
@@ -31,7 +32,13 @@ export function Sidebar({ companyName, companyInitials }: SidebarProps) {
   return (
     <nav className="sidebar">
       <div className="sidebar-brand">
-        <div className="sidebar-logo">{companyInitials}</div>
+        <div className="sidebar-logo">
+          {companyLogo ? (
+            <img src={companyLogo} alt={companyName} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 8 }} />
+          ) : (
+            companyInitials
+          )}
+        </div>
         <span className="sidebar-brand-name">{companyName}</span>
         <button className="sidebar-toggle" onClick={toggleSidebar} aria-label="Toggle sidebar">
           {collapsed ? (
@@ -75,6 +82,16 @@ export function Sidebar({ companyName, companyInitials }: SidebarProps) {
             <line x1="23" y1="11" x2="17" y2="11" />
           </svg>
           <span className="nav-label">Create Patient</span>
+        </NavLink>
+
+        <NavLink to="/patients/form-builder" className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>
+          <svg className="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+            <line x1="8" y1="13" x2="16" y2="13" />
+            <line x1="8" y1="17" x2="12" y2="17" />
+          </svg>
+          <span className="nav-label">Form Builder</span>
         </NavLink>
 
         <NavLink to="/pharmacists" className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>

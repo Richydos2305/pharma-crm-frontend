@@ -23,10 +23,13 @@ export interface IPatient {
   age: number;
   address: string;
   phoneNumber: string;
+  /** @legacy kept for reading pre-form-builder records */
   prescriptions: string[];
+  /** @legacy kept for reading pre-form-builder records */
   appointmentDates: string[];
   notes: string;
   customFields: Record<string, unknown>;
+  formSnapshot?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
 }
@@ -60,16 +63,21 @@ export interface RegisterPayload {
 export interface CreatePatientPayload {
   fullName: string;
   age: number;
-  address: string;
   phoneNumber: string;
   pharmacistName: string;
-  prescriptions: string[];
-  appointmentDates: string[];
+  address?: string;
   notes?: string;
   customFields?: Record<string, unknown>;
 }
 
 export type UpdatePatientPayload = Partial<CreatePatientPayload>;
+
+export interface FileMetadata {
+  url: string;
+  publicId: string;
+  /** Original filename — stored client-side, not returned by backend */
+  name: string;
+}
 
 export interface PaginatedPatients {
   patients: IPatient[];

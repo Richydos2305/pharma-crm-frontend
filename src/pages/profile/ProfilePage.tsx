@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../../api/queryKeys';
-import { getMe, updateMe } from '../../api/users';
+import { getMe, updateMe, uploadLogo } from '../../api/users';
 import { logout } from '../../api/auth';
 import { AppLayout } from '../../components/layout/AppLayout';
 
@@ -29,6 +29,25 @@ export function ProfilePage() {
   const [saveLoading, setSaveLoading] = useState(false);
   const [editingPharmacy, setEditingPharmacy] = useState(false);
   const [pharmacyError, setPharmacyError] = useState('');
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [logoError, setLogoError] = useState('');
+  const logoInputRef = useRef<HTMLInputElement>(null);
+
+  async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLogoUploading(true);
+    setLogoError('');
+    try {
+      await uploadLogo(file);
+      queryClient.invalidateQueries({ queryKey: queryKeys.me });
+    } catch {
+      setLogoError('Logo upload failed. Please try again.');
+    } finally {
+      setLogoUploading(false);
+      e.target.value = '';
+    }
+  }
 
   const updateMutation = useMutation({
     mutationFn: updateMe,
@@ -209,27 +228,28 @@ export function ProfilePage() {
             )}
           </div>
           <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div>
-              <span className="field-label" style={{ display: 'block', marginBottom: 4 }}>
-                Company Logo
-              </span>
-              <div className="logo-upload-row">
-                <div className="logo-preview">{user?.companyLogo ? <img src={user.companyLogo} alt="Logo" /> : companyInitials}</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <button className="upload-btn" type="button" disabled style={{ opacity: 0.5, cursor: 'not-allowed' }}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <polyline points="16 16 12 12 8 16" />
-                      <line x1="12" y1="12" x2="12" y2="21" />
-                      <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
-                    </svg>
-                    Upload Logo
-                  </button>
-                  <span style={{ fontSize: 11, color: 'var(--fg-muted)' }}>Coming soon</span>
-                </div>
-              </div>
-            </div>
             {editingPharmacy ? (
               <>
+                <div className="logo-section">
+                  <span className="field-label">Company Logo</span>
+                  <div className="logo-upload-row">
+                    <div className="logo-preview">{user?.companyLogo ? <img src={user.companyLogo} alt="Logo" /> : companyInitials}</div>
+                    <button className="upload-btn" type="button" onClick={() => logoInputRef.current?.click()} disabled={logoUploading}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polyline points="16 16 12 12 8 16" />
+                        <line x1="12" y1="12" x2="12" y2="21" />
+                        <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
+                      </svg>
+                      {logoUploading ? 'Uploading...' : 'Upload Logo'}
+                    </button>
+                    <input ref={logoInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleLogoChange} />
+                  </div>
+                  {logoError && (
+                    <div className="error-banner" style={{ marginTop: 6 }}>
+                      {logoError}
+                    </div>
+                  )}
+                </div>
                 {pharmacyError && <div className="error-banner">{pharmacyError}</div>}
                 <div className="form-group" style={{ margin: 0 }}>
                   <label className="form-label">Pharmacy Name</label>
@@ -237,11 +257,30 @@ export function ProfilePage() {
                 </div>
               </>
             ) : (
-              <div className="field-row" style={{ paddingTop: 0 }}>
-                <span className="field-label">Pharmacy Name</span>
-                <span className="field-value">{user?.companyName ?? '—'}</span>
+              <div className="pharmacy-card-top">
+                <div className="logo-section">
+                  <span className="field-label">Company Logo</span>
+                  <div className="logo-preview">{user?.companyLogo ? <img src={user.companyLogo} alt="Logo" /> : companyInitials}</div>
+                </div>
+                <div className="pharmacy-name-block">
+                  <span className="field-label">Pharmacy Name</span>
+                  <span className="field-value">{user?.companyName ?? '—'}</span>
+                </div>
               </div>
             )}
+
+            {/* Patient Intake Form shortcut */}
+            <div className="profile-intake-section">
+              <div className="profile-intake-title">Patient Intake Form</div>
+              <div className="profile-intake-desc">Manage the form you fill when creating patients</div>
+              <button type="button" className="profile-intake-btn" onClick={() => navigate('/patients/form-builder')}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
+                </svg>
+                Open Form Builder
+              </button>
+            </div>
           </div>
         </div>
       </div>

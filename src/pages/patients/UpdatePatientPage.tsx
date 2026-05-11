@@ -1,10 +1,16 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../../api/queryKeys';
-import { getPatient, updatePatient, deletePatient } from '../../api/patients';
+import { getPatient, updatePatient, deletePatient, uploadPatientFile } from '../../api/patients';
+import { listPharmacists } from '../../api/pharmacists';
 import { AppLayout } from '../../components/layout/AppLayout';
-import { PatientForm, type PatientFormValues } from '../../components/PatientForm';
+import { SchemaForm } from '../../components/SchemaForm';
+import { hydrateState, hydrateFileState } from '../../components/schemaFormUtils';
+import { buildDefaultTemplate } from '../../types/formBuilder';
+import type { FormSchema } from '../../types/formBuilder';
+import type { FileMetadata } from '../../types';
+import type { FileState } from '../../components/schemaFormUtils';
 
 export function UpdatePatientPage() {
   const { id } = useParams<{ id: string }>();
@@ -19,28 +25,58 @@ export function UpdatePatientPage() {
     enabled: Boolean(id)
   });
 
-  const updateMutation = useMutation({
-    mutationFn: (values: PatientFormValues) =>
-      updatePatient(id!, {
-        fullName: values.fullName,
-        age: Number(values.age),
-        phoneNumber: values.phoneNumber,
-        address: values.address,
-        prescriptions: values.prescriptions.map(({ text }) => text),
-        appointmentDates: values.appointmentDate ? [values.appointmentDate] : [],
-        ...(values.notes ? { notes: values.notes } : {}),
-        customFields: Object.fromEntries(values.customFields.filter((f) => f.name).map((f) => [f.name, f.value]))
-      }),
-    onSuccess: () => {
+  const { data: pharmacists = [] } = useQuery({
+    queryKey: queryKeys.pharmacists,
+    queryFn: listPharmacists,
+    gcTime: 30 * 60 * 1000
+  });
+
+  const schema: FormSchema = useMemo(() => {
+    return patient?.formSnapshot ? (patient.formSnapshot as unknown as FormSchema) : buildDefaultTemplate();
+  }, [patient]);
+
+  const initialState = useMemo(() => {
+    return patient ? hydrateState(schema, patient) : undefined;
+  }, [patient, schema]);
+
+  const initialFileState = useMemo(() => {
+    return patient ? hydrateFileState(schema, patient) : undefined;
+  }, [patient, schema]);
+
+  const [saving, setSaving] = useState(false);
+
+  async function handleSubmit(payload: import('../../types').CreatePatientPayload, fileState: FileState) {
+    setError('');
+    setSaving(true);
+    try {
+      await updatePatient(id!, payload);
+
+      // Always reconcile file fields: upload pending + preserve existing (deletions already done)
+      if (Object.keys(fileState).length > 0) {
+        const fileCustomFields: Record<string, FileMetadata[]> = {};
+        for (const [fieldId, fState] of Object.entries(fileState)) {
+          if (fState.pending.length > 0) {
+            const uploaded = await Promise.all(fState.pending.map((f) => uploadPatientFile(id!, f)));
+            fileCustomFields[fieldId] = [...fState.existing, ...uploaded];
+          } else {
+            fileCustomFields[fieldId] = fState.existing;
+          }
+        }
+        await updatePatient(id!, {
+          customFields: { ...(payload.customFields ?? {}), ...fileCustomFields }
+        });
+      }
+
       queryClient.invalidateQueries({ queryKey: queryKeys.patients.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.patients.detail(id!) });
       navigate('/patients');
-    },
-    onError: (err: unknown) => {
+    } catch (err) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
       setError(msg ?? 'Failed to update patient.');
+    } finally {
+      setSaving(false);
     }
-  });
+  }
 
   const deleteMutation = useMutation({
     mutationFn: () => deletePatient(id!),
@@ -50,32 +86,12 @@ export function UpdatePatientPage() {
     }
   });
 
-  async function handleSubmit(values: PatientFormValues) {
-    setError('');
-    await updateMutation.mutateAsync(values);
+  async function handleExistingFileDeleted(fieldId: string, remaining: import('../../types').FileMetadata[]) {
+    const currentCustomFields = { ...(patient?.customFields ?? {}) };
+    currentCustomFields[fieldId] = remaining;
+    await updatePatient(id!, { customFields: currentCustomFields });
+    queryClient.invalidateQueries({ queryKey: queryKeys.patients.detail(id!) });
   }
-
-  // Build initial values from existing patient data
-  const initialValues: Partial<PatientFormValues> | undefined = patient
-    ? {
-        fullName: patient.fullName,
-        age: String(patient.age),
-        phoneNumber: patient.phoneNumber,
-        address: patient.address,
-        pharmacistName: patient.pharmacistName ?? '',
-        appointmentDate: patient.appointmentDates?.length
-          ? new Date(patient.appointmentDates[patient.appointmentDates.length - 1]).toISOString().slice(0, 10)
-          : '',
-        notes: patient.notes,
-        prescriptions: Array.isArray(patient.prescriptions) ? patient.prescriptions.map((text: string) => ({ text })) : [],
-        customFields: Object.entries(patient.customFields ?? {}).map(([name, value]) => ({
-          id: name,
-          name,
-          type: 'text' as const,
-          value: String(value)
-        }))
-      }
-    : undefined;
 
   const mobileTopBar = (
     <div className="mobile-topbar">
@@ -139,14 +155,18 @@ export function UpdatePatientPage() {
         )}
       </div>
 
-      <PatientForm
+      <SchemaForm
         key={patient.id}
-        initialValues={initialValues}
+        schema={schema}
+        initialState={initialState}
+        initialFileState={initialFileState}
+        pharmacists={pharmacists}
         isUpdate={true}
         onSubmit={handleSubmit}
+        onExistingFileDeleted={handleExistingFileDeleted}
         onCancel={() => navigate('/patients')}
         submitLabel="Update Patient"
-        loading={updateMutation.isPending}
+        loading={saving}
         error={error}
       />
     </AppLayout>
