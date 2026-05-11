@@ -127,19 +127,25 @@ export function buildDefaultTemplate(): FormSchema {
   };
 }
 
-export function buildQuickTemplate(): FormSchema {
+export function buildConsultationTemplate(): FormSchema {
   return {
     id: uid(),
-    name: 'Quick Intake',
+    name: 'Consultation Intake',
     status: 'draft',
     sections: [
       { ...PERSONAL_INFO_SECTION, id: 'personal-info', fields: PERSONAL_INFO_SECTION.fields.map((f) => ({ ...f })) },
       {
         id: uid(),
-        name: 'Visit Notes',
+        name: 'Medical Information',
         type: 'standard',
-        fields: [{ id: uid(), label: 'Chief Complaint', type: 'textarea', required: false }]
-      }
+        fields: [
+          { id: uid(), label: 'Appointment Date', type: 'date', required: false },
+          { id: uid(), label: 'Attended To By', type: 'relation', required: true, locked: true },
+          { id: uid(), label: 'Notes', type: 'textarea', required: false },
+          { id: uid(), label: 'Consultation Fee', type: 'number', required: false }
+        ]
+      },
+      { ...PRESCRIPTIONS_SECTION, fields: PRESCRIPTIONS_SECTION.fields.map((f) => ({ ...f })) }
     ]
   };
 }
@@ -153,12 +159,15 @@ export function buildFollowUpTemplate(): FormSchema {
       { ...PERSONAL_INFO_SECTION, id: 'personal-info', fields: PERSONAL_INFO_SECTION.fields.map((f) => ({ ...f })) },
       {
         id: uid(),
-        name: 'Follow-up Notes',
-        type: 'standard',
+        name: 'Medical Information',
+        type: 'repeatable',
+        rowLabel: 'Visit',
+        addButtonLabel: 'Add another visit',
         fields: [
-          { id: uid(), label: 'Date of Follow-up', type: 'date', required: true },
-          { id: uid(), label: 'Progress Notes', type: 'textarea', required: false },
-          { id: uid(), label: 'Next Steps', type: 'textarea', required: false }
+          { id: uid(), label: 'Appointment Date', type: 'date', required: false },
+          { id: uid(), label: 'Attended To By', type: 'relation', required: true, locked: true },
+          { id: uid(), label: 'Notes', type: 'textarea', required: false },
+          { id: uid(), label: 'Lab Results', type: 'file', required: false }
         ]
       },
       { ...PRESCRIPTIONS_SECTION, fields: PRESCRIPTIONS_SECTION.fields.map((f) => ({ ...f })) }
@@ -168,6 +177,11 @@ export function buildFollowUpTemplate(): FormSchema {
 
 export const STARTER_TEMPLATES = [
   { key: 'default', label: 'Default Intake', description: 'Personal info, medical notes & prescriptions', build: buildDefaultTemplate },
-  { key: 'quick', label: 'Quick Intake', description: 'Personal info and a quick notes field', build: buildQuickTemplate },
+  {
+    key: 'consultation',
+    label: 'Consultation Intake',
+    description: 'Personal info, medical notes, prescriptions & consultation fee',
+    build: buildConsultationTemplate
+  },
   { key: 'followup', label: 'Follow-up Visit', description: 'Tracks progress and prescription changes', build: buildFollowUpTemplate }
 ] as const;

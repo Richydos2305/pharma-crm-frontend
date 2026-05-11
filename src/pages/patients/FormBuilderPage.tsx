@@ -104,7 +104,6 @@ export function FormBuilderPage() {
   const [showAddSection, setShowAddSection] = useState(false);
   const [showMobileSettings, setShowMobileSettings] = useState(false);
   const [showAddFieldMobile, setShowAddFieldMobile] = useState(false);
-  const [savedStatus, setSavedStatus] = useState<'idle' | 'saved' | 'error'>('idle');
   const [showTemplateSwitcher, setShowTemplateSwitcher] = useState(false);
   const [pendingTemplateSchema, setPendingTemplateSchema] = useState<FormSchema | null>(null);
   const isModifiedRef = useRef(false);
@@ -132,13 +131,8 @@ export function FormBuilderPage() {
     onSuccess: () => {
       setSchema((prev) => (prev ? { ...prev, status: 'published' } : prev));
       queryClient.invalidateQueries({ queryKey: queryKeys.settings });
-      setSavedStatus('saved');
-      setTimeout(() => setSavedStatus('idle'), 2000);
     },
-    onError: () => {
-      setSavedStatus('error');
-      setTimeout(() => setSavedStatus('idle'), 3000);
-    }
+    onError: () => {}
   });
 
   // ─── Mark form as modified (renames to "Custom Form" on first change) ────────
@@ -209,12 +203,6 @@ export function FormBuilderPage() {
     markModified();
   }
 
-  function handleSaveDraft() {
-    // Local save: could persist to localStorage or API in future
-    setSavedStatus('saved');
-    setTimeout(() => setSavedStatus('idle'), 2000);
-  }
-
   function handlePublish() {
     if (!schema) return;
     publishMutation.mutate();
@@ -277,6 +265,12 @@ export function FormBuilderPage() {
       {/* Desktop page header: title + mode toggle + actions (hidden on mobile) */}
       <div className="fb-page-header">
         <div className="fb-page-header__left">
+          <button type="button" className="fb-templates-back-btn" onClick={() => setShowTemplateSwitcher(true)}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+            Templates
+          </button>
           <h1
             className="fb-page-title"
             contentEditable
@@ -309,9 +303,6 @@ export function FormBuilderPage() {
 
           {/* Desktop actions */}
           <div className="fb-header-actions">
-            <button type="button" className="btn-ghost fb-header-btn" onClick={handleSaveDraft}>
-              {savedStatus === 'saved' ? '✓ Saved' : 'Save Draft'}
-            </button>
             <button type="button" className="btn-save fb-header-btn" onClick={handlePublish} disabled={publishMutation.isPending}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <polyline points="20 6 9 17 4 12" />

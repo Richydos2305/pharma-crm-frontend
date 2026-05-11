@@ -1958,6 +1958,26 @@ body.sidebar-collapsed .main-area {
   gap: 10px;
   flex-wrap: wrap;
 }
+.fb-templates-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-default);
+  background: transparent;
+  color: var(--fg-muted);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.fb-templates-back-btn:hover {
+  background: var(--active-nav-bg);
+  color: var(--surface-inverse);
+}
 .fb-page-title {
   font-family: 'Funnel Sans', system-ui, sans-serif;
   font-size: 22px;
