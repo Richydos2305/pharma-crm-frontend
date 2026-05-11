@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../../api/queryKeys';
 import { listPharmacists, createPharmacist, updatePharmacist, deletePharmacist } from '../../api/pharmacists';
 import { listPatients } from '../../api/patients';
+import { getMe } from '../../api/users';
 import { AppLayout } from '../../components/layout/AppLayout';
 import type { IPharmacist, IPatient } from '../../types';
 
@@ -124,6 +125,8 @@ export function PharmacistsPage() {
   const [editTarget, setEditTarget] = useState<IPharmacist | null>(null);
   const [modalError, setModalError] = useState('');
 
+  const { data: user } = useQuery({ queryKey: queryKeys.me, queryFn: getMe, staleTime: Infinity, gcTime: Infinity });
+
   const { data: pharmacists = [], isLoading } = useQuery({
     queryKey: queryKeys.pharmacists,
     queryFn: listPharmacists,
@@ -182,7 +185,15 @@ export function PharmacistsPage() {
   const mobileTopBar = (
     <div className="mobile-topbar">
       <span className="mobile-topbar-title">Pharmacists</span>
-      <div style={{ width: 24 }} />
+      <div className="mobile-topbar-avatar">
+        {user?.companyLogo ? (
+          <img src={user.companyLogo} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+        ) : user?.fullName ? (
+          pharmacistInitials(user.fullName)
+        ) : (
+          'U'
+        )}
+      </div>
     </div>
   );
 

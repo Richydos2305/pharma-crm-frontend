@@ -29,7 +29,7 @@ export function AppLayout({ children, mobileTopBar }: AppLayoutProps) {
     <>
       {mobileTopBar}
       <div className="app-layout">
-        <Sidebar companyName={companyName} companyInitials={companyInitials} />
+        <Sidebar companyName={companyName} companyInitials={companyInitials} companyLogo={user?.companyLogo} />
         <main className="main-area app-page">{children}</main>
       </div>
       <BottomNav />

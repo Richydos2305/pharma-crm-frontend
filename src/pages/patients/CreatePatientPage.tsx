@@ -1,16 +1,30 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../../api/queryKeys';
-import { createPatient } from '../../api/patients';
+import { createPatient, updatePatient, uploadPatientFile } from '../../api/patients';
+import { getSettings } from '../../api/settings';
 import { listPharmacists } from '../../api/pharmacists';
+import { getMe } from '../../api/users';
 import { AppLayout } from '../../components/layout/AppLayout';
-import { PatientForm, type PatientFormValues } from '../../components/PatientForm';
+import { SchemaForm } from '../../components/SchemaForm';
+import { buildDefaultTemplate } from '../../types/formBuilder';
+import type { FormSchema } from '../../types/formBuilder';
+import type { FileMetadata } from '../../types';
+import type { FileState } from '../../components/schemaFormUtils';
 
 export function CreatePatientPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const { data: user } = useQuery({ queryKey: queryKeys.me, queryFn: getMe, staleTime: Infinity, gcTime: Infinity });
+
+  const { data: settings, isLoading: settingsLoading } = useQuery({
+    queryKey: queryKeys.settings,
+    queryFn: getSettings
+  });
 
   const { data: pharmacists = [] } = useQuery({
     queryKey: queryKeys.pharmacists,
@@ -18,32 +32,41 @@ export function CreatePatientPage() {
     gcTime: 30 * 60 * 1000
   });
 
-  const mutation = useMutation({
-    mutationFn: (values: PatientFormValues) =>
-      createPatient({
-        fullName: values.fullName,
-        age: Number(values.age),
-        phoneNumber: values.phoneNumber,
-        address: values.address,
-        pharmacistName: values.pharmacistName,
-        prescriptions: values.prescriptions.map(({ text }) => text),
-        appointmentDates: values.appointmentDate ? [values.appointmentDate] : [],
-        ...(values.notes ? { notes: values.notes } : {}),
-        customFields: Object.fromEntries(values.customFields.filter((f) => f.name).map((f) => [f.name, f.value]))
-      }),
-    onSuccess: () => {
+  const schema: FormSchema = useMemo(() => {
+    const published = settings?.formConfig?.schema;
+    return published ? (published as FormSchema) : buildDefaultTemplate();
+  }, [settings]);
+
+  async function handleSubmit(payload: import('../../types').CreatePatientPayload, fileState: FileState) {
+    setError('');
+    setSaving(true);
+    try {
+      const patient = await createPatient(payload);
+
+      // Upload any pending files and write metadata back to customFields
+      const fileCustomFields: Record<string, FileMetadata[]> = {};
+      let hasFiles = false;
+      for (const [fieldId, fState] of Object.entries(fileState)) {
+        if (fState.pending.length > 0) {
+          hasFiles = true;
+          const uploaded = await Promise.all(fState.pending.map((f) => uploadPatientFile(patient.id, f)));
+          fileCustomFields[fieldId] = uploaded;
+        }
+      }
+      if (hasFiles) {
+        await updatePatient(patient.id, {
+          customFields: { ...(payload.customFields ?? {}), ...fileCustomFields }
+        });
+      }
+
       queryClient.invalidateQueries({ queryKey: queryKeys.patients.all });
       navigate('/patients');
-    },
-    onError: (err: unknown) => {
+    } catch (err) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
       setError(msg ?? 'Failed to create patient.');
+    } finally {
+      setSaving(false);
     }
-  });
-
-  async function handleSubmit(values: PatientFormValues) {
-    setError('');
-    await mutation.mutateAsync(values);
   }
 
   const mobileTopBar = (
@@ -54,19 +77,43 @@ export function CreatePatientPage() {
         </svg>
       </button>
       <span className="mobile-topbar-title">New Patient</span>
-      <div style={{ width: 24 }} />
+      <div className="mobile-topbar-avatar">
+        {user?.companyLogo ? (
+          <img src={user.companyLogo} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+        ) : user?.fullName ? (
+          user.fullName
+            .split(' ')
+            .map((w: string) => w[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2)
+        ) : (
+          'U'
+        )}
+      </div>
     </div>
   );
+
+  if (settingsLoading) {
+    return (
+      <AppLayout mobileTopBar={mobileTopBar}>
+        <div className="spinner-wrap">
+          <div className="spinner" />
+        </div>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout mobileTopBar={mobileTopBar}>
       <h1 className="page-title">New Patient</h1>
-      <PatientForm
+      <SchemaForm
+        schema={schema}
+        pharmacists={pharmacists}
         onSubmit={handleSubmit}
         onCancel={() => navigate('/patients')}
-        pharmacists={pharmacists}
         submitLabel="Save Patient"
-        loading={mutation.isPending}
+        loading={saving}
         error={error}
       />
     </AppLayout>
