@@ -139,14 +139,26 @@ export function ProfilePage() {
     <AppLayout mobileTopBar={mobileTopBar}>
       {/* Mobile header */}
       <div className="mobile-profile-header">
-        <div className="avatar-lg">{userInitials}</div>
+        <div className="avatar-lg">
+          {user?.companyLogo ? (
+            <img src={user.companyLogo} alt={user?.fullName} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+          ) : (
+            userInitials
+          )}
+        </div>
         <div style={{ fontFamily: "'Funnel Sans', system-ui, sans-serif", fontSize: 18, fontWeight: 700 }}>{user?.fullName}</div>
         <span className="profile-badge">{roleLabel}</span>
       </div>
 
       {/* Desktop hero */}
       <div className="profile-hero">
-        <div className="avatar-lg">{userInitials}</div>
+        <div className="avatar-lg">
+          {user?.companyLogo ? (
+            <img src={user.companyLogo} alt={user?.fullName} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+          ) : (
+            userInitials
+          )}
+        </div>
         <div>
           <div style={{ fontFamily: "'Funnel Sans', system-ui, sans-serif", fontSize: 22, fontWeight: 700, marginBottom: 4 }}>{user?.fullName}</div>
           <span className="profile-badge">{roleLabel}</span>
