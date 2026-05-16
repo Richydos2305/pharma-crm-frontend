@@ -36,8 +36,36 @@ export function ForgotPasswordPage() {
 
             {submitted ? (
               <>
-                <h1>Check your email</h1>
-                <p className="subtitle">
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
+                  <div
+                    style={{
+                      width: 64,
+                      height: 64,
+                      borderRadius: 16,
+                      background: 'var(--border-subtle)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'var(--accent-primary)'
+                    }}
+                  >
+                    <svg
+                      width="28"
+                      height="28"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <rect x="2" y="4" width="20" height="16" rx="2" />
+                      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                    </svg>
+                  </div>
+                </div>
+                <h1 style={{ textAlign: 'center' }}>Check your email</h1>
+                <p className="subtitle" style={{ textAlign: 'center' }}>
                   If an account exists for <strong>{email}</strong>, we've sent a password reset link. Check your inbox.
                 </p>
                 <p className="auth-footer-link" style={{ marginTop: 32 }}>
