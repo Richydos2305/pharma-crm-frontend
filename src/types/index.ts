@@ -49,6 +49,27 @@ export interface AuthTokens {
   refreshToken: string;
 }
 
+export interface RegisterResult {
+  message: string;
+}
+
+export interface VerifyEmailPayload {
+  token: string;
+}
+
+export interface ResendVerificationPayload {
+  email: string;
+}
+
+export interface ForgotPasswordPayload {
+  email: string;
+}
+
+export interface ResetPasswordPayload {
+  token: string;
+  newPassword: string;
+}
+
 export interface LoginPayload {
   email: string;
   password: string;

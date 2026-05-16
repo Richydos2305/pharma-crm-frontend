@@ -1,52 +1,84 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { register } from '../../api/auth';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { resetPassword } from '../../api/auth';
 
-export function RegisterPage() {
+export function ResetPasswordPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token') ?? '';
 
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
-    if (password.length < 8) {
+
+    if (newPassword.length < 8) {
       setError('Password must be at least 8 characters.');
       return;
     }
-    if (!/[A-Z]/.test(password)) {
+    if (!/[A-Z]/.test(newPassword)) {
       setError('Password must contain at least one uppercase letter.');
       return;
     }
-    if (!/[a-z]/.test(password)) {
+    if (!/[a-z]/.test(newPassword)) {
       setError('Password must contain at least one lowercase letter.');
       return;
     }
-    if (!/[^a-zA-Z0-9]/.test(password)) {
+    if (!/[^a-zA-Z0-9]/.test(newPassword)) {
       setError('Password must contain at least one special character.');
       return;
     }
-    if (password !== confirmPassword) {
+    if (newPassword !== confirmPassword) {
       setError('Passwords do not match.');
       return;
     }
+
     setLoading(true);
     try {
-      await register({ fullName, email, password });
-      navigate('/check-email', { state: { email } });
+      await resetPassword({ token, newPassword });
+      navigate('/login', { state: { message: 'Password reset successfully. You can now sign in.' } });
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      setError(msg ?? 'Registration failed. Please try again.');
+      setError(msg ?? 'Failed to reset password. Your link may have expired.');
     } finally {
       setLoading(false);
     }
+  }
+
+  if (!token) {
+    return (
+      <>
+        <div className="mobile-brand">
+          <div className="mobile-logo">P</div>
+          <div className="mobile-brand-name">PharmaCRM</div>
+          <div className="mobile-brand-tagline">Patient records, simplified.</div>
+        </div>
+        <div className="auth-layout">
+          <div className="auth-hero">
+            <p className="auth-hero-tagline">Patient records, simplified.</p>
+            <p className="auth-hero-brand">PharmaCRM</p>
+          </div>
+          <div className="auth-panel">
+            <div className="auth-box">
+              <div className="mobile-divider" />
+              <h1>Invalid link</h1>
+              <div className="error-banner">No reset token found. Please request a new password reset link.</div>
+              <p className="auth-footer-link">
+                <Link className="link" to="/forgot-password">
+                  Request new link
+                </Link>
+              </p>
+            </div>
+          </div>
+        </div>
+      </>
+    );
   }
 
   return (
@@ -64,46 +96,22 @@ export function RegisterPage() {
         <div className="auth-panel">
           <div className="auth-box">
             <div className="mobile-divider" />
-            <h1>Create your account</h1>
-            <p className="subtitle">Sign up to manage your patient records.</p>
+            <h1>Reset your password</h1>
+            <p className="subtitle">Choose a new password for your account.</p>
 
             {error && <div className="error-banner">{error}</div>}
 
             <form onSubmit={handleSubmit}>
               <div className="form-group">
-                <label htmlFor="fullName">Full Name</label>
-                <input
-                  id="fullName"
-                  className="form-input"
-                  type="text"
-                  placeholder="Jane Smith"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="email">Email Address</label>
-                <input
-                  id="email"
-                  className="form-input"
-                  type="email"
-                  placeholder="jane@pharmacy.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="password">Password</label>
+                <label htmlFor="newPassword">New Password</label>
                 <div className="input-wrapper">
                   <input
-                    id="password"
+                    id="newPassword"
                     className="form-input"
                     type={showPassword ? 'text' : 'password'}
                     placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
                     minLength={8}
                     required
                   />
@@ -157,16 +165,9 @@ export function RegisterPage() {
                 </div>
               </div>
               <button className="btn-primary" type="submit" disabled={loading}>
-                {loading ? 'Creating account...' : 'Create Account'}
+                {loading ? 'Resetting...' : 'Reset Password'}
               </button>
             </form>
-
-            <p className="auth-footer-link">
-              Already have an account?{' '}
-              <Link className="link" to="/login">
-                Sign in →
-              </Link>
-            </p>
           </div>
         </div>
       </div>
