@@ -3545,7 +3545,7 @@
                   "type": "ref",
                   "ref": "C3KOZ",
                   "x": 24,
-                  "y": 24.019943701668048,
+                  "y": 24.01994370166805,
                   "width": "fill_container",
                   "descendants": {
                     "NEMHS": {
@@ -19143,7 +19143,8 @@
                               "width": 220,
                               "content": "Each patient can add another medication row as needed.",
                               "fontFamily": "Geist",
-                              "fontSize": 12
+                              "fontSize": 12,
+                              "fontWeight": "normal"
                             }
                           ]
                         },
@@ -19407,7 +19408,8 @@
                       "width": "fill_container",
                       "content": "Custom fields added here become columns inside every prescription row.",
                       "fontFamily": "Geist",
-                      "fontSize": 11
+                      "fontSize": 11,
+                      "fontWeight": "normal"
                     },
                     {
                       "type": "frame",
@@ -20108,7 +20110,8 @@
                           "width": "fill_container",
                           "content": "Add another prescription if you're taking more than one medication.",
                           "fontFamily": "Geist",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -21182,7 +21185,8 @@
                               "width": 210,
                               "content": "This is how the repeatable section behaves after a patient taps the add button once.",
                               "fontFamily": "Geist",
-                              "fontSize": 12
+                              "fontSize": 12,
+                              "fontWeight": "normal"
                             }
                           ]
                         },
@@ -21420,7 +21424,8 @@
                               "width": "fill_container",
                               "content": "Medication Name • Dosage • Frequency",
                               "fontFamily": "Geist",
-                              "fontSize": 12
+                              "fontSize": 12,
+                              "fontWeight": "normal"
                             }
                           ]
                         },
@@ -21490,7 +21495,8 @@
                               "width": "fill_container",
                               "content": "A second row appears instantly with the same fields.",
                               "fontFamily": "Geist",
-                              "fontSize": 12
+                              "fontSize": 12,
+                              "fontWeight": "normal"
                             }
                           ]
                         },
@@ -21502,7 +21508,8 @@
                           "width": "fill_container",
                           "content": "Next tap adds Prescription 3 using the same row template.",
                           "fontFamily": "Geist",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -21514,7 +21521,8 @@
                       "width": "fill_container",
                       "content": "Add Custom Field still controls which columns appear inside every prescription row.",
                       "fontFamily": "Geist",
-                      "fontSize": 11
+                      "fontSize": 11,
+                      "fontWeight": "normal"
                     },
                     {
                       "type": "frame",
@@ -21657,7 +21665,8 @@
                   "fill": "#5e5954",
                   "content": "Desktop builder for creating custom patient intake workflows.",
                   "fontFamily": "Geist",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -21861,7 +21870,8 @@
                           "width": "fill_container",
                           "content": "Mirrors the current pharmacy intake flow with repeatable prescriptions.",
                           "fontFamily": "Geist",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "frame",
@@ -21913,7 +21923,8 @@
                           "width": "fill_container",
                           "content": "Reduced form for walk-in patients with fewer mandatory fields.",
                           "fontFamily": "Geist",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "text",
@@ -21953,7 +21964,8 @@
                           "width": "fill_container",
                           "content": "Focused template for refill reviews, symptoms, and outcomes.",
                           "fontFamily": "Geist",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "text",
@@ -22013,7 +22025,8 @@
                               "fill": "#5e5954",
                               "content": "Desktop uses multi-column layouts while preserving the same section model as mobile.",
                               "fontFamily": "Geist",
-                              "fontSize": 13
+                              "fontSize": 13,
+                              "fontWeight": "normal"
                             }
                           ]
                         },
@@ -22492,7 +22505,8 @@
                                       "fill": "#5e5954",
                                       "content": "Patients can add more rows from the same row template.",
                                       "fontFamily": "Geist",
-                                      "fontSize": 13
+                                      "fontSize": 13,
+                                      "fontWeight": "normal"
                                     }
                                   ]
                                 },
@@ -22713,7 +22727,8 @@
                                   "width": 300,
                                   "content": "Custom fields become columns inside every repeated row.",
                                   "fontFamily": "Geist",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             }
@@ -22878,7 +22893,8 @@
                               "fill": "#5e5954",
                               "content": "Prescriptions",
                               "fontFamily": "Geist",
-                              "fontSize": 13
+                              "fontSize": 13,
+                              "fontWeight": "normal"
                             }
                           ]
                         }
@@ -22920,7 +22936,8 @@
                               "fill": "#5e5954",
                               "content": "Prescription",
                               "fontFamily": "Geist",
-                              "fontSize": 13
+                              "fontSize": 13,
+                              "fontWeight": "normal"
                             }
                           ]
                         }
@@ -22962,7 +22979,8 @@
                               "fill": "#5e5954",
                               "content": "Add another prescription",
                               "fontFamily": "Geist",
-                              "fontSize": 13
+                              "fontSize": 13,
+                              "fontWeight": "normal"
                             }
                           ]
                         }
@@ -22995,7 +23013,8 @@
                           "width": "fill_container",
                           "content": "Settings stay visible while the left canvas updates instantly.",
                           "fontFamily": "Geist",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -23217,7 +23236,8 @@
                       "width": "fill_container",
                       "content": "Desktop can use multi-column layouts. Mobile automatically collapses the same section back to a stacked layout.",
                       "fontFamily": "Geist",
-                      "fontSize": 13
+                      "fontSize": 13,
+                      "fontWeight": "normal"
                     },
                     {
                       "type": "text",
@@ -23227,7 +23247,8 @@
                       "width": "fill_container",
                       "content": "Repeatable rows keep the same columns across desktop and mobile.",
                       "fontFamily": "Geist",
-                      "fontSize": 13
+                      "fontSize": 13,
+                      "fontWeight": "normal"
                     }
                   ]
                 }
@@ -23296,7 +23317,8 @@
                   "fill": "#5e5954",
                   "content": "Desktop preview of the published patient intake experience.",
                   "fontFamily": "Geist",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -23516,7 +23538,8 @@
                       "width": "fill_container",
                       "content": "Preview the final patient-facing form before publishing it across desktop and mobile.",
                       "fontFamily": "Geist",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -23639,7 +23662,8 @@
                                       "fill": "#5e5954",
                                       "content": "Margaret Osei",
                                       "fontFamily": "Geist",
-                                      "fontSize": 13
+                                      "fontSize": 13,
+                                      "fontWeight": "normal"
                                     }
                                   ]
                                 }
@@ -23680,7 +23704,8 @@
                                       "fill": "#5e5954",
                                       "content": "47",
                                       "fontFamily": "Geist",
-                                      "fontSize": 13
+                                      "fontSize": 13,
+                                      "fontWeight": "normal"
                                     }
                                   ]
                                 }
@@ -23729,7 +23754,8 @@
                                       "fill": "#5e5954",
                                       "content": "+1 (600) 000-0000",
                                       "fontFamily": "Geist",
-                                      "fontSize": 13
+                                      "fontSize": 13,
+                                      "fontWeight": "normal"
                                     }
                                   ]
                                 }
@@ -23770,7 +23796,8 @@
                                       "fill": "#5e5954",
                                       "content": "Select pharmacist...",
                                       "fontFamily": "Geist",
-                                      "fontSize": 13
+                                      "fontSize": 13,
+                                      "fontWeight": "normal"
                                     }
                                   ]
                                 }
@@ -23814,7 +23841,8 @@
                                   "fill": "#5e5954",
                                   "content": "123 Main St, City, State",
                                   "fontFamily": "Geist",
-                                  "fontSize": 13
+                                  "fontSize": 13,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             }
@@ -23887,7 +23915,8 @@
                                       "fill": "#5e5954",
                                       "content": "YYYY-MM-DD",
                                       "fontFamily": "Geist",
-                                      "fontSize": 13
+                                      "fontSize": 13,
+                                      "fontWeight": "normal"
                                     }
                                   ]
                                 }
@@ -23928,7 +23957,8 @@
                                       "fill": "#5e5954",
                                       "content": "Add any relevant medical notes...",
                                       "fontFamily": "Geist",
-                                      "fontSize": 13
+                                      "fontSize": 13,
+                                      "fontWeight": "normal"
                                     }
                                   ]
                                 }
@@ -23980,7 +24010,8 @@
                                   "fill": "#5e5954",
                                   "content": "Add another prescription if you're taking more than one medication.",
                                   "fontFamily": "Geist",
-                                  "fontSize": 13
+                                  "fontSize": 13,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             },
@@ -24067,7 +24098,8 @@
                                           "fill": "#5e5954",
                                           "content": "Enter medication name",
                                           "fontFamily": "Geist",
-                                          "fontSize": 13
+                                          "fontSize": 13,
+                                          "fontWeight": "normal"
                                         }
                                       ]
                                     }
@@ -24108,7 +24140,8 @@
                                           "fill": "#5e5954",
                                           "content": "e.g. 500mg twice daily",
                                           "fontFamily": "Geist",
-                                          "fontSize": 13
+                                          "fontSize": 13,
+                                          "fontWeight": "normal"
                                         }
                                       ]
                                     }
@@ -24149,7 +24182,8 @@
                                           "fill": "#5e5954",
                                           "content": "Choose frequency",
                                           "fontFamily": "Geist",
-                                          "fontSize": 13
+                                          "fontSize": 13,
+                                          "fontWeight": "normal"
                                         }
                                       ]
                                     }
@@ -24239,7 +24273,8 @@
                       "width": "fill_container",
                       "content": "This is the published desktop experience patients will see when the form goes live.",
                       "fontFamily": "Geist",
-                      "fontSize": 13
+                      "fontSize": 13,
+                      "fontWeight": "normal"
                     },
                     {
                       "type": "frame",
@@ -24324,7 +24359,8 @@
                       "width": "fill_container",
                       "content": "Each click on the patient-side add button creates a new prescription row with the same columns and labels.",
                       "fontFamily": "Geist",
-                      "fontSize": 13
+                      "fontSize": 13,
+                      "fontWeight": "normal"
                     },
                     {
                       "type": "frame",
@@ -24454,7 +24490,8 @@
                       "width": "fill_container",
                       "content": "Desktop preview keeps two columns where space allows. The same form collapses to stacked inputs on mobile without changing the section model.",
                       "fontFamily": "Geist",
-                      "fontSize": 13
+                      "fontSize": 13,
+                      "fontWeight": "normal"
                     }
                   ]
                 }
@@ -24523,7 +24560,8 @@
                   "fill": "#5e5954",
                   "content": "Desktop builder with a persistent side panel for repeatable prescription rows.",
                   "fontFamily": "Geist",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -24727,7 +24765,8 @@
                           "width": "fill_container",
                           "content": "Mirrors the current pharmacy intake flow with repeatable prescriptions.",
                           "fontFamily": "Geist",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "frame",
@@ -24779,7 +24818,8 @@
                           "width": "fill_container",
                           "content": "Reduced form for walk-in patients with fewer mandatory fields.",
                           "fontFamily": "Geist",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "text",
@@ -24819,7 +24859,8 @@
                           "width": "fill_container",
                           "content": "Focused template for refill reviews, symptoms, and outcomes.",
                           "fontFamily": "Geist",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "text",
@@ -24879,7 +24920,8 @@
                               "fill": "#5e5954",
                               "content": "Desktop uses multi-column layouts while preserving the same section model as mobile.",
                               "fontFamily": "Geist",
-                              "fontSize": 13
+                              "fontSize": 13,
+                              "fontWeight": "normal"
                             }
                           ]
                         },
@@ -25361,7 +25403,8 @@
                                       "width": 420,
                                       "content": "Selected section. The right panel edits template rules while the canvas shows live row behavior.",
                                       "fontFamily": "Geist",
-                                      "fontSize": 13
+                                      "fontSize": 13,
+                                      "fontWeight": "normal"
                                     }
                                   ]
                                 },
@@ -25593,7 +25636,8 @@
                                           "fill": "#5e5954",
                                           "content": "Medication Name • Dosage • Frequency",
                                           "fontFamily": "Geist",
-                                          "fontSize": 12
+                                          "fontSize": 12,
+                                          "fontWeight": "normal"
                                         }
                                       ]
                                     },
@@ -25622,7 +25666,8 @@
                                           "fill": "#5e5954",
                                           "content": "Generated after the patient taps the add-row button.",
                                           "fontFamily": "Geist",
-                                          "fontSize": 12
+                                          "fontSize": 12,
+                                          "fontWeight": "normal"
                                         }
                                       ]
                                     }
@@ -25636,7 +25681,8 @@
                                   "width": "fill_container",
                                   "content": "Every new row inherits the same field definitions from the row template above.",
                                   "fontFamily": "Geist",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             },
@@ -25727,7 +25773,8 @@
                                   "width": 300,
                                   "content": "Template changes apply to every row across desktop and mobile.",
                                   "fontFamily": "Geist",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             }
@@ -25892,7 +25939,8 @@
                               "fill": "#5e5954",
                               "content": "Prescriptions",
                               "fontFamily": "Geist",
-                              "fontSize": 13
+                              "fontSize": 13,
+                              "fontWeight": "normal"
                             }
                           ]
                         }
@@ -25934,7 +25982,8 @@
                               "fill": "#5e5954",
                               "content": "Add another prescription",
                               "fontFamily": "Geist",
-                              "fontSize": 13
+                              "fontSize": 13,
+                              "fontWeight": "normal"
                             }
                           ]
                         }
@@ -25967,7 +26016,8 @@
                           "width": "fill_container",
                           "content": "Changes here update the selected section in the left canvas immediately.",
                           "fontFamily": "Geist",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -26130,7 +26180,8 @@
                       "width": "fill_container",
                       "content": "Add or change columns here. Every row inherits the same field structure.",
                       "fontFamily": "Geist",
-                      "fontSize": 13
+                      "fontSize": 13,
+                      "fontWeight": "normal"
                     },
                     {
                       "type": "frame",
@@ -26167,6 +26218,287 @@
                       ]
                     }
                   ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "YMYcQ",
+      "x": 18608,
+      "y": -384,
+      "name": "Email Verification Template",
+      "width": 1200,
+      "height": 920,
+      "fill": "#f5f2e9",
+      "layout": "vertical",
+      "gap": 24,
+      "padding": [
+        96,
+        24
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "Z3JaX",
+          "name": "Email Verification Canvas",
+          "width": 620,
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "frame",
+              "id": "moHU3",
+              "name": "Email Verification Card",
+              "width": "fill_container",
+              "fill": "#fefcf7",
+              "cornerRadius": 12,
+              "stroke": {
+                "align": "inside",
+                "thickness": 1,
+                "fill": "#dcd8cb"
+              },
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#0000000d",
+                "offset": {
+                  "x": 0,
+                  "y": 1
+                },
+                "blur": 1.75
+              },
+              "layout": "vertical",
+              "gap": 28,
+              "padding": 40,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "L4mIgS",
+                  "name": "Accent Bar",
+                  "width": 72,
+                  "height": 4,
+                  "fill": "#7d6b3d",
+                  "cornerRadius": 999
+                },
+                {
+                  "type": "text",
+                  "id": "rJ583",
+                  "name": "Greeting",
+                  "fill": "#2d2926",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Hi {{fullName}},",
+                  "lineHeight": 1.25,
+                  "fontFamily": "Funnel Sans",
+                  "fontSize": 28,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "AfFA6",
+                  "name": "Body",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 16,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "lfJ3M",
+                      "name": "Body Copy",
+                      "fill": "#4f4a44",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Please verify your email address by clicking the link below. This link expires in 24 hours.",
+                      "lineHeight": 1.6,
+                      "fontFamily": "Geist",
+                      "fontSize": 16,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "d7QZk2",
+                  "name": "Primary CTA",
+                  "fill": "#2d2926",
+                  "cornerRadius": 10,
+                  "padding": [
+                    12,
+                    20
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "MHKhA",
+                      "name": "CTA Label",
+                      "fill": "#fffef8",
+                      "content": "Verify Email",
+                      "lineHeight": 1.4286,
+                      "fontFamily": "Geist",
+                      "fontSize": 14,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "SDbFt",
+                  "name": "Footnote",
+                  "fill": "#8c8782",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "If you did not request this, you can safely ignore this email.",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Geist",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "o2le7e",
+      "x": 19928,
+      "y": -384,
+      "name": "Password Reset Template",
+      "width": 1200,
+      "height": 920,
+      "fill": "#f5f2e9",
+      "layout": "vertical",
+      "gap": 24,
+      "padding": [
+        96,
+        24
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "HdIk5",
+          "name": "Password Reset Canvas",
+          "width": 620,
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "frame",
+              "id": "p2cnOy",
+              "name": "Password Reset Card",
+              "width": "fill_container",
+              "fill": "#fefcf7",
+              "cornerRadius": 12,
+              "stroke": {
+                "align": "inside",
+                "thickness": 1,
+                "fill": "#dcd8cb"
+              },
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#0000000d",
+                "offset": {
+                  "x": 0,
+                  "y": 1
+                },
+                "blur": 1.75
+              },
+              "layout": "vertical",
+              "gap": 28,
+              "padding": 40,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "BNJ9Q",
+                  "name": "Accent Bar",
+                  "width": 72,
+                  "height": 4,
+                  "fill": "#7d6b3d",
+                  "cornerRadius": 999
+                },
+                {
+                  "type": "text",
+                  "id": "Efh1T",
+                  "name": "Greeting",
+                  "fill": "#2d2926",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Hi {{fullName}},",
+                  "lineHeight": 1.25,
+                  "fontFamily": "Funnel Sans",
+                  "fontSize": 28,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "xemuM",
+                  "name": "Body",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 16,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "NOwNp",
+                      "name": "Body Copy",
+                      "fill": "#4f4a44",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "You requested a password reset. Click the link below to set a new password. This link expires in 1 hour.",
+                      "lineHeight": 1.6,
+                      "fontFamily": "Geist",
+                      "fontSize": 16,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Q89P0L",
+                  "name": "Primary CTA",
+                  "width": "fill_container",
+                  "fill": "#2d2926",
+                  "cornerRadius": 10,
+                  "padding": [
+                    12,
+                    20
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "IIOoE",
+                      "name": "CTA Label",
+                      "fill": "#fffef8",
+                      "content": "Reset Password",
+                      "lineHeight": 1.4286,
+                      "fontFamily": "Geist",
+                      "fontSize": 14,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "A4pNW",
+                  "name": "Footnote",
+                  "fill": "#8c8782",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "If you did not request this, you can safely ignore this email.",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Geist",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
                 }
               ]
             }
