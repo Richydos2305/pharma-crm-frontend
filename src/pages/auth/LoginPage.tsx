@@ -1,17 +1,23 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { login } from '../../api/auth';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { login, resendVerification } from '../../api/auth';
 import { useAuth } from '../../context/useAuthHook';
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { setAuthenticated } = useAuth();
+
+  const successMessage = (location.state as { message?: string } | null)?.message ?? '';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [isUnverified, setIsUnverified] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendSent, setResendSent] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -24,10 +30,31 @@ export function LoginPage() {
       setAuthenticated(true);
       navigate('/dashboard');
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      setError(msg ?? 'Invalid email or password.');
+      const apiErr = err as { response?: { data?: { message?: string; error?: { code?: string } } } };
+      const code = apiErr?.response?.data?.error?.code;
+      if (code === 'EMAIL_NOT_VERIFIED') {
+        setIsUnverified(true);
+        setError('Your email address has not been verified yet.');
+      } else {
+        setIsUnverified(false);
+        const msg = apiErr?.response?.data?.message;
+        setError(msg ?? 'Invalid email or password.');
+      }
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleResend() {
+    if (!email || resendLoading) return;
+    setResendLoading(true);
+    try {
+      await resendVerification({ email });
+      setResendSent(true);
+    } catch {
+      // silently ignore — avoids email enumeration
+    } finally {
+      setResendLoading(false);
     }
   }
 
@@ -49,7 +76,35 @@ export function LoginPage() {
             <h1>Welcome back</h1>
             <p className="subtitle">Sign in to your PharmaCRM account.</p>
 
+            {successMessage && <div className="success-banner">{successMessage}</div>}
             {error && <div className="error-banner">{error}</div>}
+            {isUnverified && (
+              <div className="success-banner" style={{ background: '#fffbeb', borderColor: '#fde68a', color: '#92400e' }}>
+                {resendSent ? (
+                  'Verification email sent. Check your inbox.'
+                ) : (
+                  <>
+                    Need to verify your email?{' '}
+                    <button
+                      type="button"
+                      onClick={handleResend}
+                      disabled={resendLoading}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        padding: 0,
+                        cursor: 'pointer',
+                        color: '#92400e',
+                        fontWeight: 600,
+                        textDecoration: 'underline'
+                      }}
+                    >
+                      {resendLoading ? 'Sending...' : 'Resend verification email'}
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
 
             <form onSubmit={handleSubmit}>
               <div className="form-group">
@@ -67,6 +122,9 @@ export function LoginPage() {
               <div className="form-group">
                 <div className="label-row">
                   <label htmlFor="password">Password</label>
+                  <Link className="forgot-link" to="/forgot-password">
+                    Forgot password?
+                  </Link>
                 </div>
                 <div className="input-wrapper">
                   <input
