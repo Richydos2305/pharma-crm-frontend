@@ -22,7 +22,7 @@ function initials(name: string): string {
 export function AppLayout({ children, mobileTopBar }: AppLayoutProps) {
   const { data: user } = useQuery({ queryKey: queryKeys.me, queryFn: getMe, staleTime: Infinity, gcTime: Infinity });
 
-  const companyName = user?.companyName ?? 'PharmaCRM';
+  const companyName = user?.companyName ?? 'PharmaPRS';
   const companyInitials = companyName ? initials(companyName) : 'P';
 
   return (

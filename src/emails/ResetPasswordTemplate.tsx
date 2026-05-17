@@ -12,7 +12,7 @@ export function ResetPasswordTemplate({ fullName, resetUrl }: ResetPasswordTempl
   return (
     <Html lang="en">
       <Head />
-      <Preview>Reset your PharmaCRM password</Preview>
+      <Preview>Reset your PharmaPRS password</Preview>
       <Body style={styles.body}>
         <Container style={styles.container}>
           {/* Card */}
