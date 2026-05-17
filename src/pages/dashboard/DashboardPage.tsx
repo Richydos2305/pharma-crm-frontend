@@ -48,7 +48,7 @@ export function DashboardPage() {
 
   const mobileTopBar = (
     <div className="mobile-topbar">
-      <span className="mobile-topbar-title">{user?.companyName ?? 'PharmaCRM'}</span>
+      <span className="mobile-topbar-title">{user?.companyName ?? 'PharmaPRS'}</span>
       <div className="mobile-topbar-avatar">
         {user?.companyLogo ? (
           <img src={user.companyLogo} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />

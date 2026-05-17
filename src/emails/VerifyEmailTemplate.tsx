@@ -12,7 +12,7 @@ export function VerifyEmailTemplate({ fullName, verifyUrl }: VerifyEmailTemplate
   return (
     <Html lang="en">
       <Head />
-      <Preview>Verify your email address for PharmaCRM</Preview>
+      <Preview>Verify your email address for PharmaPRS</Preview>
       <Body style={styles.body}>
         <Container style={styles.container}>
           {/* Card */}

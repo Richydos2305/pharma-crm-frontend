@@ -53,13 +53,13 @@ export function RegisterPage() {
     <>
       <div className="mobile-brand">
         <div className="mobile-logo">P</div>
-        <div className="mobile-brand-name">PharmaCRM</div>
+        <div className="mobile-brand-name">PharmaPRS</div>
         <div className="mobile-brand-tagline">Patient records, simplified.</div>
       </div>
       <div className="auth-layout">
         <div className="auth-hero">
           <p className="auth-hero-tagline">Patient records, simplified.</p>
-          <p className="auth-hero-brand">PharmaCRM</p>
+          <p className="auth-hero-brand">PharmaPRS</p>
         </div>
         <div className="auth-panel">
           <div className="auth-box">
