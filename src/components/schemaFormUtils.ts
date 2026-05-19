@@ -8,6 +8,8 @@ type SectionState = FieldValues | RepeatableRow[];
 
 export type FileFieldState = { existing: FileMetadata[]; pending: File[] };
 export type FileState = Record<string, FileFieldState>;
+// sectionId → rowId → fieldId → FileFieldState
+export type RepeatableFileState = Record<string, Record<string, Record<string, FileFieldState>>>;
 export type RepeatableRow = { rowId: string; values: FieldValues; isNew?: boolean };
 export type FormState = Record<string, SectionState>;
 
@@ -152,7 +154,15 @@ export function buildPayload(schema: FormSchema, state: FormState, isUpdate = fa
       // Repeatable: all rows go to customFields keyed by section.id
       const rows = (state[section.id] as RepeatableRow[]) ?? [];
       if (rows.length > 0) {
-        customFields[section.id] = rows.map((r) => r.values);
+        const fileFieldIds = new Set(section.fields.filter((f) => f.type === 'file').map((f) => f.id));
+        customFields[section.id] = rows.map((r) => {
+          if (fileFieldIds.size === 0) return r.values;
+          const vals: FieldValues = {};
+          for (const [k, v] of Object.entries(r.values)) {
+            if (!fileFieldIds.has(k)) vals[k] = v;
+          }
+          return vals;
+        });
       }
     }
   }

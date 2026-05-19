@@ -10,8 +10,7 @@ import { AppLayout } from '../../components/layout/AppLayout';
 import { SchemaForm } from '../../components/SchemaForm';
 import { buildDefaultTemplate } from '../../types/formBuilder';
 import type { FormSchema } from '../../types/formBuilder';
-import type { FileMetadata } from '../../types';
-import type { FileState } from '../../components/schemaFormUtils';
+import type { FileState, RepeatableFileState } from '../../components/schemaFormUtils';
 
 export function CreatePatientPage() {
   const navigate = useNavigate();
@@ -37,14 +36,14 @@ export function CreatePatientPage() {
     return published ? (published as FormSchema) : buildDefaultTemplate();
   }, [settings]);
 
-  async function handleSubmit(payload: import('../../types').CreatePatientPayload, fileState: FileState) {
+  async function handleSubmit(payload: import('../../types').CreatePatientPayload, fileState: FileState, repFileState: RepeatableFileState) {
     setError('');
     setSaving(true);
     try {
       const patient = await createPatient(payload);
 
       // Upload any pending files and write metadata back to customFields
-      const fileCustomFields: Record<string, FileMetadata[]> = {};
+      const fileCustomFields: Record<string, unknown> = {};
       let hasFiles = false;
       for (const [fieldId, fState] of Object.entries(fileState)) {
         if (fState.pending.length > 0) {
@@ -53,6 +52,29 @@ export function CreatePatientPage() {
           fileCustomFields[fieldId] = uploaded;
         }
       }
+
+      // Upload repeatable-section file fields
+      for (const [sectionId, rowMap] of Object.entries(repFileState)) {
+        const payloadRows = (payload.customFields?.[sectionId] as Record<string, unknown>[]) ?? [];
+        const rowEntries = Object.entries(rowMap);
+        if (rowEntries.length === 0) continue;
+        const updatedRows = await Promise.all(
+          payloadRows.map(async (rowValues, idx) => {
+            const rowFileState = rowEntries[idx]?.[1] ?? {};
+            const merged: Record<string, unknown> = { ...(rowValues as Record<string, unknown>) };
+            for (const [fieldId, fstate] of Object.entries(rowFileState)) {
+              if (fstate.pending.length > 0) {
+                const uploaded = await Promise.all(fstate.pending.map((f) => uploadPatientFile(patient.id, f)));
+                merged[fieldId] = uploaded;
+              }
+            }
+            return merged;
+          })
+        );
+        fileCustomFields[sectionId] = updatedRows;
+        hasFiles = true;
+      }
+
       if (hasFiles) {
         await updatePatient(patient.id, {
           customFields: { ...(payload.customFields ?? {}), ...fileCustomFields }
