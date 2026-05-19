@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { FormSchema, FieldSchema, SectionSchema } from '../types/formBuilder';
 import type { IPharmacist, CreatePatientPayload, FileMetadata } from '../types';
 import { deletePatientFile } from '../api/patients';
-import type { FileFieldState, FileState, RepeatableRow, FormState } from './schemaFormUtils';
+import type { FileFieldState, FileState, RepeatableFileState, RepeatableRow, FormState } from './schemaFormUtils';
 
 // ─── Private type aliases ─────────────────────────────────────────────────────
 
@@ -47,6 +47,28 @@ function initFileState(schema: FormSchema, initial?: FileState): FileState {
   return fs;
 }
 
+function initRepeatableFileState(schema: FormSchema, initialState?: FormState): RepeatableFileState {
+  const rfs: RepeatableFileState = {};
+  for (const section of schema.sections) {
+    if (section.type !== 'repeatable') continue;
+    const fileFields = section.fields.filter((f) => f.type === 'file');
+    if (fileFields.length === 0) continue;
+    const rows = (initialState?.[section.id] as RepeatableRow[]) ?? [];
+    rfs[section.id] = {};
+    for (const row of rows) {
+      rfs[section.id][row.rowId] = {};
+      for (const field of fileFields) {
+        const rawVal = (row.values as unknown as Record<string, unknown>)[field.id];
+        rfs[section.id][row.rowId][field.id] = {
+          existing: Array.isArray(rawVal) ? (rawVal as FileMetadata[]) : [],
+          pending: []
+        };
+      }
+    }
+  }
+  return rfs;
+}
+
 // ─── Build API payload from form state ───────────────────────────────────────
 
 function buildPayload(schema: FormSchema, state: FormState, isUpdate = false): CreatePatientPayload {
@@ -84,6 +106,7 @@ function buildPayload(schema: FormSchema, state: FormState, isUpdate = false): C
         const filteredRows = rows.map((r) => {
           const rowValues: FieldValues = {};
           for (const [fieldId, value] of Object.entries(r.values)) {
+            if (fieldMap[fieldId]?.type === 'file') continue; // files handled via repFileState
             rowValues[fieldId] = value;
             const coreKey = CORE_TOP_LEVEL[fieldId];
             const isRelation = fieldMap[fieldId]?.type === 'relation';
@@ -394,19 +417,40 @@ interface RepeatableSectionProps {
   onRowsChange: (rows: RepeatableRow[]) => void;
   pharmacists: IPharmacist[];
   isUpdate?: boolean;
+  rowFileState: Record<string, Record<string, FileFieldState>>;
+  onRowAdded: (rowId: string) => void;
+  onRowRemoved: (rowId: string) => void;
+  onAddRepFiles: (rowId: string, fieldId: string, files: File[]) => void;
+  onRemoveRepPending: (rowId: string, fieldId: string, index: number) => void;
+  onDeleteRepExisting: (rowId: string, fieldId: string, publicId: string) => Promise<void>;
 }
 
-function RepeatableSection({ section, rows, onRowsChange, pharmacists, isUpdate = false }: RepeatableSectionProps) {
+function RepeatableSection({
+  section,
+  rows,
+  onRowsChange,
+  pharmacists,
+  isUpdate = false,
+  rowFileState,
+  onRowAdded,
+  onRowRemoved,
+  onAddRepFiles,
+  onRemoveRepPending,
+  onDeleteRepExisting
+}: RepeatableSectionProps) {
   function addRow() {
+    const newRowId = uid();
     const emptyValues: FieldValues = {};
     for (const f of section.fields) {
       if (f.type !== 'file') emptyValues[f.id] = '';
     }
-    onRowsChange([...rows, { rowId: uid(), values: emptyValues, isNew: true }]);
+    onRowsChange([...rows, { rowId: newRowId, values: emptyValues, isNew: true }]);
+    onRowAdded(newRowId);
   }
 
   function removeRow(rowId: string) {
     onRowsChange(rows.filter((r) => r.rowId !== rowId));
+    onRowRemoved(rowId);
   }
 
   function updateRowField(rowId: string, fieldId: string, value: string) {
@@ -438,9 +482,17 @@ function RepeatableSection({ section, rows, onRowsChange, pharmacists, isUpdate 
               </button>
             </div>
             <div className="form-grid-2">
-              {section.fields
-                .filter((f) => f.type !== 'file')
-                .map((field) => (
+              {section.fields.map((field) =>
+                field.type === 'file' ? (
+                  <FileFieldInput
+                    key={field.id}
+                    field={field}
+                    fileFieldState={rowFileState[row.rowId]?.[field.id] ?? { existing: [], pending: [] }}
+                    onAddFiles={(files) => onAddRepFiles(row.rowId, field.id, files)}
+                    onRemovePending={(idx) => onRemoveRepPending(row.rowId, field.id, idx)}
+                    onDeleteExisting={(publicId) => onDeleteRepExisting(row.rowId, field.id, publicId)}
+                  />
+                ) : (
                   <FieldInput
                     key={field.id}
                     field={field}
@@ -449,7 +501,8 @@ function RepeatableSection({ section, rows, onRowsChange, pharmacists, isUpdate 
                     pharmacists={pharmacists}
                     disabled={isUpdate && !row.isNew && field.type === 'relation'}
                   />
-                ))}
+                )
+              )}
             </div>
           </div>
         ))}
@@ -465,7 +518,7 @@ interface SchemaFormProps {
   initialState?: FormState;
   initialFileState?: FileState;
   pharmacists?: IPharmacist[];
-  onSubmit: (payload: CreatePatientPayload, fileState: FileState) => Promise<void>;
+  onSubmit: (payload: CreatePatientPayload, fileState: FileState, repFileState: RepeatableFileState) => Promise<void>;
   onExistingFileDeleted?: (fieldId: string, remaining: FileMetadata[]) => Promise<void>;
   onCancel: () => void;
   submitLabel: string;
@@ -493,6 +546,91 @@ export function SchemaForm({
   }));
 
   const [fileState, setFileState] = useState<FileState>(() => initFileState(schema, initialFileState));
+
+  const [repFileState, setRepFileState] = useState<RepeatableFileState>(() =>
+    initRepeatableFileState(schema, { ...initState(schema), ...initialState })
+  );
+
+  function onRepRowAdded(sectionId: string, rowId: string) {
+    const section = schema.sections.find((s) => s.id === sectionId);
+    if (!section) return;
+    const fileFields = section.fields.filter((f) => f.type === 'file');
+    if (fileFields.length === 0) return;
+    setRepFileState((s) => {
+      const sectionState = { ...(s[sectionId] ?? {}) };
+      sectionState[rowId] = {};
+      for (const f of fileFields) {
+        sectionState[rowId][f.id] = { existing: [], pending: [] };
+      }
+      return { ...s, [sectionId]: sectionState };
+    });
+  }
+
+  function onRepRowRemoved(sectionId: string, rowId: string) {
+    // Best-effort: delete existing files from storage
+    const rowFiles = repFileState[sectionId]?.[rowId];
+    if (rowFiles) {
+      for (const fstate of Object.values(rowFiles)) {
+        for (const ef of fstate.existing) {
+          deletePatientFile(ef.publicId).catch(() => {});
+        }
+      }
+    }
+    setRepFileState((s) => {
+      const sectionState = { ...(s[sectionId] ?? {}) };
+      delete sectionState[rowId];
+      return { ...s, [sectionId]: sectionState };
+    });
+  }
+
+  function addRepFiles(sectionId: string, rowId: string, fieldId: string, files: File[]) {
+    setRepFileState((s) => ({
+      ...s,
+      [sectionId]: {
+        ...s[sectionId],
+        [rowId]: {
+          ...s[sectionId]?.[rowId],
+          [fieldId]: {
+            ...(s[sectionId]?.[rowId]?.[fieldId] ?? { existing: [], pending: [] }),
+            pending: [...(s[sectionId]?.[rowId]?.[fieldId]?.pending ?? []), ...files]
+          }
+        }
+      }
+    }));
+  }
+
+  function removeRepPending(sectionId: string, rowId: string, fieldId: string, index: number) {
+    setRepFileState((s) => ({
+      ...s,
+      [sectionId]: {
+        ...s[sectionId],
+        [rowId]: {
+          ...s[sectionId]?.[rowId],
+          [fieldId]: {
+            ...(s[sectionId]?.[rowId]?.[fieldId] ?? { existing: [], pending: [] }),
+            pending: (s[sectionId]?.[rowId]?.[fieldId]?.pending ?? []).filter((_, i) => i !== index)
+          }
+        }
+      }
+    }));
+  }
+
+  async function deleteRepExisting(sectionId: string, rowId: string, fieldId: string, publicId: string) {
+    await deletePatientFile(publicId);
+    setRepFileState((s) => ({
+      ...s,
+      [sectionId]: {
+        ...s[sectionId],
+        [rowId]: {
+          ...s[sectionId]?.[rowId],
+          [fieldId]: {
+            ...(s[sectionId]?.[rowId]?.[fieldId] ?? { existing: [], pending: [] }),
+            existing: (s[sectionId]?.[rowId]?.[fieldId]?.existing ?? []).filter((f) => f.publicId !== publicId)
+          }
+        }
+      }
+    }));
+  }
 
   function addFiles(fieldId: string, files: File[]) {
     setFileState((s) => ({
@@ -534,7 +672,7 @@ export function SchemaForm({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    await onSubmit(buildPayload(schema, state, isUpdate), fileState);
+    await onSubmit(buildPayload(schema, state, isUpdate), fileState, repFileState);
   }
 
   return (
@@ -563,6 +701,12 @@ export function SchemaForm({
             onRowsChange={(rows) => setRows(section.id, rows)}
             pharmacists={pharmacists}
             isUpdate={isUpdate}
+            rowFileState={repFileState[section.id] ?? {}}
+            onRowAdded={(rowId) => onRepRowAdded(section.id, rowId)}
+            onRowRemoved={(rowId) => onRepRowRemoved(section.id, rowId)}
+            onAddRepFiles={(rowId, fieldId, files) => addRepFiles(section.id, rowId, fieldId, files)}
+            onRemoveRepPending={(rowId, fieldId, idx) => removeRepPending(section.id, rowId, fieldId, idx)}
+            onDeleteRepExisting={(rowId, fieldId, publicId) => deleteRepExisting(section.id, rowId, fieldId, publicId)}
           />
         )
       )}

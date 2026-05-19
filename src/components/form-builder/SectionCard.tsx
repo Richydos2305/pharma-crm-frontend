@@ -74,27 +74,47 @@ export function SectionCard({ section, isSelected, onSelect, onDelete }: Section
       <div className="fb-section-card__body">
         {isRepeatable ? (
           <>
-            {/* Column headers for repeatable */}
-            <div className="fb-repeatable-header">
-              {section.fields.map((f) => (
-                <div key={f.id} className="fb-repeatable-col">
-                  <span className="fb-col-label">{f.label}</span>
-                  {f.required && (
-                    <span className="fb-required-dot" aria-label="required">
-                      *
-                    </span>
-                  )}
-                </div>
-              ))}
+            {/* Desktop: table-style header + ghost row */}
+            <div className="fb-repeatable-desktop-only">
+              <div className="fb-repeatable-header">
+                {section.fields.map((f) => (
+                  <div key={f.id} className="fb-repeatable-col">
+                    <span className="fb-col-label">{f.label}</span>
+                    {f.required && (
+                      <span className="fb-required-dot" aria-label="required">
+                        *
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div className="fb-repeatable-row fb-repeatable-row--ghost">
+                {section.fields.map((f) => (
+                  <div key={f.id} className="fb-repeatable-cell">
+                    <div className="fb-field-stub">{FIELD_TYPE_LABELS[f.type]}</div>
+                  </div>
+                ))}
+              </div>
             </div>
-            {/* Ghost row */}
-            <div className="fb-repeatable-row fb-repeatable-row--ghost">
+
+            {/* Mobile: same grid layout as standard sections */}
+            <div className="fb-fields-grid fb-repeatable-mobile-only">
               {section.fields.map((f) => (
-                <div key={f.id} className="fb-repeatable-cell">
+                <div key={f.id} className="fb-field-preview">
+                  <div className="fb-field-preview__label">
+                    {f.label}
+                    {f.required && (
+                      <span className="fb-required-dot" aria-label="required">
+                        {' '}
+                        *
+                      </span>
+                    )}
+                  </div>
                   <div className="fb-field-stub">{FIELD_TYPE_LABELS[f.type]}</div>
                 </div>
               ))}
             </div>
+
             <div className="fb-repeatable-add-hint">+ {section.addButtonLabel ?? `Add another ${section.rowLabel ?? 'row'}`}</div>
           </>
         ) : (

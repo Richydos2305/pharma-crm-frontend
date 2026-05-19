@@ -2293,6 +2293,13 @@ body.sidebar-collapsed .main-area {
   cursor: default;
 }
 
+.fb-repeatable-desktop-only {
+  display: block;
+}
+.fb-repeatable-mobile-only {
+  display: none;
+}
+
 /* ─── Add section button ─── */
 .fb-add-section-btn {
   display: flex;
@@ -2930,6 +2937,12 @@ body.sidebar-collapsed .main-area {
   }
   .fb-fields-grid {
     grid-template-columns: 1fr;
+  }
+  .fb-repeatable-desktop-only {
+    display: none;
+  }
+  .fb-repeatable-mobile-only {
+    display: grid;
   }
   .fb-preview-canvas__subtitle {
     display: block;
