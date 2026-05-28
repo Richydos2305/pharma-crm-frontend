@@ -1,10 +1,12 @@
 import { apiClient } from './client';
 import type { FormSchema } from '../types/formBuilder';
+import type { OnboardingStatus } from '../types';
 
 export interface SettingsData {
   formConfig?: {
     schema?: FormSchema;
   };
+  onboarding?: OnboardingStatus;
 }
 
 export async function getSettings(): Promise<SettingsData | null> {
