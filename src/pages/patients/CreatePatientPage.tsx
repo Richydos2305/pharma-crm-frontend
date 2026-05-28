@@ -82,6 +82,7 @@ export function CreatePatientPage() {
       }
 
       queryClient.invalidateQueries({ queryKey: queryKeys.patients.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.settings });
       navigate('/patients');
     } catch (err) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;

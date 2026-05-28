@@ -111,3 +111,15 @@ export interface ApiError {
   message: string;
   status?: number;
 }
+
+export interface OnboardingSteps {
+  profileComplete: boolean;
+  firstPharmacistAdded: boolean;
+  formBuilt: boolean;
+  firstPatientAdded: boolean;
+}
+
+export interface OnboardingStatus {
+  allComplete: boolean;
+  steps: OnboardingSteps;
+}

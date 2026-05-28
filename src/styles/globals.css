@@ -477,6 +477,12 @@ body.sidebar-collapsed .main-area {
 }
 
 /* ─── Dashboard ─── */
+.desktop-greeting {
+  font-family: 'Geist', system-ui, sans-serif;
+  font-size: 14px;
+  color: var(--fg-muted);
+  margin-bottom: 4px;
+}
 .stats-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -486,19 +492,20 @@ body.sidebar-collapsed .main-area {
 .stat-card {
   background: var(--card-fill);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-card);
+  border-radius: 10px;
   box-shadow: var(--shadow);
-  padding: 20px;
+  padding: 24px;
 }
 .stat-card .stat-label {
-  font-size: 12px;
+  font-family: 'Geist', system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
   color: var(--fg-muted);
-  margin-bottom: 6px;
-  font-family: 'Newsreader', Georgia, serif;
+  margin-bottom: 8px;
 }
 .stat-card .stat-value {
-  font-family: 'Funnel Sans', system-ui, sans-serif;
-  font-size: 32px;
+  font-family: 'Geist', system-ui, sans-serif;
+  font-size: 40px;
   font-weight: 700;
   color: var(--surface-inverse);
 }
@@ -513,25 +520,187 @@ body.sidebar-collapsed .main-area {
   gap: 10px;
   justify-content: center;
 }
+.mobile-quick-actions {
+  display: none;
+}
+.mobile-quick-actions-title {
+  font-family: 'Geist', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--surface-inverse);
+  margin-bottom: 2px;
+}
 .recent-header {
   display: flex;
-  align-items: baseline;
-  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 16px;
 }
 .recent-header h2 {
-  font-family: 'Funnel Sans', system-ui, sans-serif;
+  font-family: 'Geist', system-ui, sans-serif;
   font-size: 16px;
   font-weight: 600;
+  color: var(--surface-inverse);
 }
 .view-all-link {
-  font-size: 12px;
+  font-family: 'Geist', system-ui, sans-serif;
+  font-size: 14px;
   color: var(--accent-primary);
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 400;
 }
 .view-all-link:hover {
   text-decoration: underline;
+}
+
+/* ─── Onboarding Checklist ─── */
+.onboarding-card {
+  background: var(--card-fill);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  margin-bottom: 28px;
+  overflow: hidden;
+}
+.onboarding-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.onboarding-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.onboarding-title {
+  font-family: 'Geist', system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--surface-inverse);
+}
+.onboarding-progress-text {
+  font-family: 'Geist', system-ui, sans-serif;
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+.onboarding-toggle {
+  display: flex;
+  background: #ede9e0;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--fg-secondary);
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.onboarding-toggle:hover {
+  background: #e5e0d5;
+}
+.onboarding-progress-fill-wrap {
+  padding: 0 20px;
+  padding-top: 14px;
+  padding-bottom: 2px;
+}
+.onboarding-progress-bar {
+  height: 4px;
+  background: var(--border-subtle);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.onboarding-progress-fill {
+  height: 100%;
+  background: var(--accent-primary);
+  border-radius: 99px;
+  transition: width 0.3s ease;
+}
+.onboarding-steps {
+  display: none;
+  flex-direction: column;
+  list-style: none;
+  padding: 14px 20px 22px;
+  gap: 0;
+}
+.onboarding-steps--open {
+  display: flex;
+}
+.onboarding-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 0;
+}
+.onboarding-step:first-child {
+  padding-top: 0;
+}
+.onboarding-step-icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+.onboarding-step--done .onboarding-step-icon {
+  color: var(--accent-primary);
+}
+.onboarding-step-circle {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  border: 1.5px solid #c4bdb3;
+}
+.onboarding-step-divider {
+  height: 1px;
+  background: #e8e2d8;
+  margin: 2px 0;
+  padding: 0;
+}
+.onboarding-step-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.onboarding-step-label {
+  font-family: 'Geist', system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--surface-inverse);
+}
+.onboarding-step--done .onboarding-step-label {
+  color: #a09888;
+  font-weight: 500;
+}
+.onboarding-step-desc {
+  font-family: 'Geist', system-ui, sans-serif;
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+.onboarding-step-cta {
+  flex-shrink: 0;
+  background: var(--card-fill);
+  border: 1px solid var(--border-subtle);
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--surface-inverse);
+  padding: 7px 12px;
+  white-space: nowrap;
+  font-family: 'Geist', system-ui, sans-serif;
+}
+.onboarding-step-cta:hover {
+  background: #ede9e0;
+}
+.onboarding-step-arrow {
+  display: none;
 }
 .patient-cards-grid {
   display: grid;
@@ -1373,6 +1542,18 @@ body.sidebar-collapsed .main-area {
 .empty-state p {
   font-size: 14px;
 }
+.empty-state-headline {
+  font-family: 'Funnel Sans', system-ui, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--surface-inverse);
+}
+.empty-state-body {
+  font-size: 13px;
+  color: var(--fg-muted);
+  max-width: 340px;
+  line-height: 1.6;
+}
 
 /* ─── Error Banner ─── */
 .error-banner {
@@ -1783,12 +1964,8 @@ body.sidebar-collapsed .main-area {
   }
 
   /* Mobile-only elements */
-  .mobile-welcome {
-    display: block;
-    font-family: 'Funnel Sans', system-ui, sans-serif;
-    font-size: 18px;
-    font-weight: 700;
-    margin-bottom: 4px;
+  .desktop-greeting {
+    display: none;
   }
   .mobile-stats {
     display: grid;
@@ -1804,22 +1981,57 @@ body.sidebar-collapsed .main-area {
     box-shadow: var(--shadow);
   }
   .mobile-stat-value {
-    font-family: 'Funnel Sans', system-ui, sans-serif;
+    font-family: 'Geist', system-ui, sans-serif;
     font-size: 28px;
     font-weight: 700;
   }
   .mobile-stat-label {
+    font-family: 'Geist', system-ui, sans-serif;
     font-size: 12px;
     color: var(--fg-muted);
     margin-top: 2px;
   }
-  .mobile-stat-sub {
-    font-size: 11px;
-    color: var(--accent-primary);
-    margin-top: 4px;
+  .mobile-quick-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: var(--card-fill);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    padding: 16px;
+    box-shadow: var(--shadow);
+    margin-top: 12px;
+    margin-bottom: 28px;
   }
   .mobile-profile-header {
     display: flex;
+  }
+
+  /* Onboarding checklist mobile */
+  .onboarding-header {
+    padding: 14px 16px;
+  }
+  .onboarding-progress-fill-wrap {
+    padding: 12px 16px 2px;
+  }
+  .onboarding-steps {
+    padding: 12px 16px 16px;
+  }
+  .onboarding-step-cta {
+    display: none;
+  }
+  .onboarding-step--navigable {
+    cursor: pointer;
+    border-radius: 6px;
+  }
+  .onboarding-step--navigable:active {
+    background: #ede9e0;
+  }
+  .onboarding-step-arrow {
+    display: flex;
+    align-items: center;
+    color: var(--fg-muted);
+    flex-shrink: 0;
   }
 
   /* Profile pharmacy card mobile spacing */
