@@ -3,7 +3,9 @@ import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '../../api/queryKeys';
 import { listPatients } from '../../api/patients';
 import { getMe } from '../../api/users';
+import { getSettings } from '../../api/settings';
 import { AppLayout } from '../../components/layout/AppLayout';
+import { OnboardingChecklist } from '../../components/OnboardingChecklist';
 import type { IPatient } from '../../types';
 
 function patientInitials(name: string): string {
@@ -41,6 +43,10 @@ export function DashboardPage() {
     queryFn: () => listPatients(),
     gcTime: 15 * 60 * 1000
   });
+  const { data: settings } = useQuery({
+    queryKey: queryKeys.settings,
+    queryFn: getSettings
+  });
 
   const recentPatients = [...patients].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 3);
   const total = patients.length;
@@ -63,10 +69,12 @@ export function DashboardPage() {
 
   return (
     <AppLayout mobileTopBar={mobileTopBar}>
-      <p className="mobile-welcome">
-        {getGreeting()}, {firstName} 👋
+      <p className="desktop-greeting">
+        {getGreeting()}, {firstName}
       </p>
       <h1 className="page-title">Dashboard</h1>
+
+      {settings?.onboarding && !settings.onboarding.allComplete && <OnboardingChecklist steps={settings.onboarding.steps} />}
 
       {/* Mobile stats */}
       <div className="mobile-stats">
@@ -76,8 +84,19 @@ export function DashboardPage() {
         </div>
         <div className="mobile-stat-card">
           <div className="mobile-stat-value">{recentPatients.length}</div>
-          <div className="mobile-stat-label">Recent</div>
+          <div className="mobile-stat-label">Recent Patients</div>
         </div>
+      </div>
+
+      {/* Mobile quick actions */}
+      <div className="mobile-quick-actions">
+        <p className="mobile-quick-actions-title">Quick Actions</p>
+        <button className="btn-primary" style={{ marginTop: 0 }} onClick={() => navigate('/patients/new')}>
+          + Add New Patient
+        </button>
+        <button className="btn-outline" onClick={() => navigate('/patients')}>
+          View All Patients
+        </button>
       </div>
 
       {/* Desktop stats */}
@@ -103,7 +122,7 @@ export function DashboardPage() {
       <div className="recent-header">
         <h2>Recent Patients</h2>
         <span className="view-all-link" onClick={() => navigate('/patients')}>
-          View all →
+          View all
         </span>
       </div>
 

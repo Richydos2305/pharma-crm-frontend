@@ -142,6 +142,7 @@ export function PharmacistsPage() {
     mutationFn: (payload: { name: string; phoneNumber?: string }) => createPharmacist(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.pharmacists });
+      queryClient.invalidateQueries({ queryKey: queryKeys.settings });
       setAddOpen(false);
       setModalError('');
     },
@@ -205,7 +206,7 @@ export function PharmacistsPage() {
         </h1>
         <button
           className="btn-primary"
-          style={{ margin: 0 }}
+          style={{ margin: 0, width: 'auto' }}
           onClick={() => {
             setModalError('');
             setAddOpen(true);
@@ -221,7 +222,18 @@ export function PharmacistsPage() {
         </div>
       ) : pharmacists.length === 0 ? (
         <div className="empty-state">
-          <p>No pharmacists yet.</p>
+          <p className="empty-state-headline">No pharmacists registered</p>
+          <p className="empty-state-body">Add your pharmacy team so you can assign them to patient visits.</p>
+          <button
+            className="btn-primary"
+            style={{ margin: 0, width: 'auto' }}
+            onClick={() => {
+              setModalError('');
+              setAddOpen(true);
+            }}
+          >
+            + Add a pharmacist
+          </button>
         </div>
       ) : (
         <div className="pharmacist-cards-grid">

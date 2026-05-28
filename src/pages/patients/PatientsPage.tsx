@@ -327,11 +327,18 @@ export function PatientsPage() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="empty-state">
-          <p>{search ? 'No patients match your search.' : 'No patients yet.'}</p>
-          {!search && (
-            <button className="btn-primary" style={{ width: 'auto', marginTop: 0 }} onClick={() => navigate('/patients/new')}>
-              Add your first patient
-            </button>
+          {search ? (
+            <p>No patients match your search.</p>
+          ) : (
+            <>
+              <p className="empty-state-headline">No patients yet</p>
+              <p className="empty-state-body">
+                Patients are the core of PharmaCRM — store prescriptions, appointment dates, and notes all in one place.
+              </p>
+              <button className="btn-primary" style={{ width: 'auto', marginTop: 0 }} onClick={() => navigate('/patients/new')}>
+                + Add your first patient
+              </button>
+            </>
           )}
         </div>
       ) : (

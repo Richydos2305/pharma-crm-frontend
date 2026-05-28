@@ -53,6 +53,7 @@ export function ProfilePage() {
     mutationFn: updateMe,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.me });
+      queryClient.invalidateQueries({ queryKey: queryKeys.settings });
       setEditing(false);
     },
     onError: (err: unknown) => {
