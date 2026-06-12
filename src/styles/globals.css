@@ -15,6 +15,26 @@
   --radius-card: 12px;
   --radius-input: 6px;
   --sidebar-w: 200px;
+
+  /* ─── Motion tokens ─── */
+  --dur-fast: 150ms;
+  --dur-standard: 220ms;
+  --dur-enter: 240ms;
+  --dur-exit: 180ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in: cubic-bezier(0.64, 0, 0.78, 0);
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+  }
 }
 
 /* ─── Reset ─── */
@@ -170,11 +190,16 @@ textarea.form-input {
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s;
+  transition:
+    background 0.15s,
+    transform 100ms var(--ease-in);
   margin-top: 8px;
 }
 .btn-primary:hover {
   background: #3d342e;
+}
+.btn-primary:active:not(:disabled) {
+  transform: scale(0.97);
 }
 .btn-primary:disabled {
   opacity: 0.6;
@@ -436,12 +461,149 @@ body.sidebar-collapsed .main-area {
   min-height: 100vh;
   transition: margin-left 0.2s;
 }
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 .page-title {
   font-family: 'Funnel Sans', system-ui, sans-serif;
   font-size: 26px;
   font-weight: 700;
   margin-bottom: 28px;
   color: var(--surface-inverse);
+  animation: page-enter var(--dur-enter) var(--ease-out) both;
+}
+
+/* ─── Section entrance animation ─── */
+@keyframes section-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Auth box */
+.auth-box {
+  animation: section-enter 360ms var(--ease-out) 60ms both;
+}
+
+/* Dashboard stat cards stagger */
+.stats-row .stat-card {
+  animation: section-enter 360ms var(--ease-out) both;
+}
+.stats-row .stat-card:nth-child(1) {
+  animation-delay: 60ms;
+}
+.stats-row .stat-card:nth-child(2) {
+  animation-delay: 130ms;
+}
+.stats-row .stat-card:nth-child(3) {
+  animation-delay: 200ms;
+}
+
+/* "Recent Patients" header */
+.recent-header {
+  animation: section-enter 360ms var(--ease-out) 200ms both;
+}
+
+/* Patient cards grid stagger (Dashboard + Patients page) */
+.patient-cards-grid .patient-card {
+  animation: section-enter 360ms var(--ease-out) both;
+}
+.patient-cards-grid .patient-card:nth-child(2) {
+  animation-delay: 60ms;
+}
+.patient-cards-grid .patient-card:nth-child(3) {
+  animation-delay: 120ms;
+}
+.patient-cards-grid .patient-card:nth-child(4) {
+  animation-delay: 180ms;
+}
+.patient-cards-grid .patient-card:nth-child(5) {
+  animation-delay: 240ms;
+}
+
+/* Pharmacist cards grid stagger */
+.pharmacist-cards-grid .pharmacist-card {
+  animation: section-enter 360ms var(--ease-out) both;
+}
+.pharmacist-cards-grid .pharmacist-card:nth-child(2) {
+  animation-delay: 60ms;
+}
+.pharmacist-cards-grid .pharmacist-card:nth-child(3) {
+  animation-delay: 120ms;
+}
+.pharmacist-cards-grid .pharmacist-card:nth-child(4) {
+  animation-delay: 180ms;
+}
+.pharmacist-cards-grid .pharmacist-card:nth-child(5) {
+  animation-delay: 240ms;
+}
+
+/* Profile: hero + cards stagger */
+.profile-hero {
+  animation: section-enter 380ms var(--ease-out) both;
+}
+.profile-cards-row .card:nth-child(1) {
+  animation: section-enter 380ms var(--ease-out) 120ms both;
+}
+.profile-cards-row .card:nth-child(2) {
+  animation: section-enter 380ms var(--ease-out) 240ms both;
+}
+
+/* Patient detail / create form sections stagger */
+.form-section {
+  animation: section-enter 360ms var(--ease-out) 60ms both;
+}
+.form-section:nth-child(2) {
+  animation-delay: 140ms;
+}
+.form-section:nth-child(3) {
+  animation-delay: 220ms;
+}
+.form-section:nth-child(4) {
+  animation-delay: 300ms;
+}
+.form-section:nth-child(n + 5) {
+  animation-delay: 360ms;
+}
+
+/* Onboarding card (conditionally rendered) */
+.onboarding-card {
+  transition:
+    opacity 360ms var(--ease-out),
+    transform 360ms var(--ease-out);
+}
+@starting-style {
+  .onboarding-card {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* Mobile: stats + quick actions stagger */
+.mobile-stats .mobile-stat-card {
+  animation: section-enter 360ms var(--ease-out) both;
+}
+.mobile-stats .mobile-stat-card:nth-child(1) {
+  animation-delay: 60ms;
+}
+.mobile-stats .mobile-stat-card:nth-child(2) {
+  animation-delay: 130ms;
+}
+
+.mobile-quick-actions {
+  animation: section-enter 360ms var(--ease-out) 200ms both;
 }
 
 /* ─── Cards ─── */
@@ -619,14 +781,23 @@ body.sidebar-collapsed .main-area {
   transition: width 0.3s ease;
 }
 .onboarding-steps {
-  display: none;
+  display: flex;
   flex-direction: column;
   list-style: none;
-  padding: 14px 20px 22px;
   gap: 0;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition:
+    max-height var(--dur-standard) var(--ease-out),
+    opacity var(--dur-standard) var(--ease-out),
+    padding var(--dur-standard) var(--ease-out);
+  padding: 0 20px;
 }
 .onboarding-steps--open {
-  display: flex;
+  max-height: 600px;
+  opacity: 1;
+  padding: 14px 20px 22px;
 }
 .onboarding-step {
   display: flex;
@@ -716,6 +887,13 @@ body.sidebar-collapsed .main-area {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  transition:
+    box-shadow var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+.patient-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 .patient-card-top {
   display: flex;
@@ -766,11 +944,16 @@ body.sidebar-collapsed .main-area {
   font-weight: 500;
   color: var(--surface-inverse);
   cursor: pointer;
-  transition: background 0.12s;
+  transition:
+    background 0.12s,
+    transform 100ms var(--ease-in);
   width: 100%;
 }
 .btn-outline:hover {
   background: var(--active-nav-bg);
+}
+.btn-outline:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 /* ─── Patients List ─── */
@@ -857,9 +1040,15 @@ body.sidebar-collapsed .main-area {
   font-weight: 500;
   color: var(--surface-inverse);
   cursor: pointer;
+  transition:
+    background var(--dur-fast),
+    transform 100ms var(--ease-in);
 }
 .btn-ghost:hover {
   background: var(--active-nav-bg);
+}
+.btn-ghost:active:not(:disabled) {
+  transform: scale(0.97);
 }
 .btn-save {
   display: flex;
@@ -873,9 +1062,15 @@ body.sidebar-collapsed .main-area {
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
+  transition:
+    background 0.15s,
+    transform 100ms var(--ease-in);
 }
 .btn-save:hover {
   background: #3d342e;
+}
+.btn-save:active:not(:disabled) {
+  transform: scale(0.97);
 }
 .btn-save:disabled {
   opacity: 0.6;
@@ -894,9 +1089,15 @@ body.sidebar-collapsed .main-area {
   color: var(--surface-primary);
   cursor: pointer;
   white-space: nowrap;
+  transition:
+    background 0.15s,
+    transform 100ms var(--ease-in);
 }
 .add-field-btn:hover {
   background: #3d342e;
+}
+.add-field-btn:active {
+  transform: scale(0.97);
 }
 .add-rx-btn {
   display: flex;
@@ -1414,7 +1615,6 @@ body.sidebar-collapsed .main-area {
   position: relative;
 }
 .dropdown-panel {
-  display: none;
   position: absolute;
   top: calc(100% + 6px);
   right: 0;
@@ -1425,9 +1625,25 @@ body.sidebar-collapsed .main-area {
   z-index: 200;
   padding: 20px;
   min-width: 240px;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.97) translateY(-4px);
+  transform-origin: top right;
+  transition:
+    opacity var(--dur-fast) var(--ease-in),
+    transform var(--dur-fast) var(--ease-in),
+    visibility 0s var(--dur-fast);
 }
 .dropdown-panel.open {
-  display: block;
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+  transform: scale(1) translateY(0);
+  transition:
+    opacity var(--dur-standard) var(--ease-out),
+    transform var(--dur-standard) var(--ease-out),
+    visibility 0s;
 }
 .dropdown-section-title {
   font-size: 11px;
@@ -1591,10 +1807,15 @@ body.sidebar-collapsed .main-area {
   font-weight: 500;
   color: #ef4444;
   cursor: pointer;
-  transition: background 0.12s;
+  transition:
+    background 0.12s,
+    transform 100ms var(--ease-in);
 }
 .delete-btn:hover {
   background: #fee2e2;
+}
+.delete-btn:active {
+  transform: scale(0.97);
 }
 
 /* ─── Attended-row ─── */
@@ -1739,6 +1960,13 @@ body.sidebar-collapsed .main-area {
   border-radius: 12px;
   box-shadow: var(--shadow);
   overflow: hidden;
+  transition:
+    box-shadow var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+.pharmacist-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 .pharmacist-card-top {
   display: flex;
@@ -1807,9 +2035,15 @@ body.sidebar-collapsed .main-area {
   font-weight: 500;
   color: var(--fg-secondary);
   cursor: pointer;
+  transition:
+    background 0.12s,
+    transform 100ms var(--ease-in);
 }
 .btn-edit-pharm:hover {
   background: var(--active-nav-bg);
+}
+.btn-edit-pharm:active {
+  transform: scale(0.97);
 }
 .btn-delete-pharm {
   width: 34px;
@@ -1823,9 +2057,15 @@ body.sidebar-collapsed .main-area {
   justify-content: center;
   cursor: pointer;
   flex-shrink: 0;
+  transition:
+    background 0.12s,
+    transform 100ms var(--ease-in);
 }
 .btn-delete-pharm:hover {
   background: #fee2e2;
+}
+.btn-delete-pharm:active {
+  transform: scale(0.97);
 }
 
 /* ─── Modal ─── */
@@ -1839,11 +2079,12 @@ body.sidebar-collapsed .main-area {
   z-index: 200;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.2s;
+  transition: opacity var(--dur-exit) var(--ease-in);
 }
 .modal-overlay.open {
   opacity: 1;
   pointer-events: all;
+  transition: opacity var(--dur-enter) var(--ease-out);
 }
 .modal-card {
   background: var(--card-fill);
@@ -1852,6 +2093,18 @@ body.sidebar-collapsed .main-area {
   max-width: 440px;
   margin: 16px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  transform: scale(0.96) translateY(8px);
+  opacity: 0;
+  transition:
+    transform var(--dur-exit) var(--ease-in),
+    opacity var(--dur-exit) var(--ease-in);
+}
+.modal-overlay.open .modal-card {
+  transform: scale(1) translateY(0);
+  opacity: 1;
+  transition:
+    transform var(--dur-enter) var(--ease-out),
+    opacity var(--dur-enter) var(--ease-out);
 }
 .modal-header {
   display: flex;
@@ -2666,10 +2919,15 @@ body.sidebar-collapsed .main-area {
   cursor: pointer;
   width: 100%;
   justify-content: center;
-  transition: background 0.12s;
+  transition:
+    background 0.12s,
+    transform 100ms var(--ease-in);
 }
 .fb-add-field-btn:hover {
   background: var(--badge-bg);
+}
+.fb-add-field-btn:active {
+  transform: scale(0.97);
 }
 .fb-responsive-rules {
   display: flex;
@@ -2720,6 +2978,15 @@ body.sidebar-collapsed .main-area {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  transition:
+    transform var(--dur-enter) var(--ease-out),
+    opacity var(--dur-enter) var(--ease-out);
+}
+@starting-style {
+  .fb-sheet {
+    opacity: 0;
+    transform: translateY(24px);
+  }
 }
 .fb-sheet__header {
   display: flex;
@@ -3170,6 +3437,12 @@ body.sidebar-collapsed .main-area {
     max-width: 480px;
     max-height: 85vh;
   }
+  @starting-style {
+    .fb-sheet {
+      opacity: 0;
+      transform: scale(0.96) translateY(8px);
+    }
+  }
 }
 
 /* ─── Mobile-only FB components (base: hidden, shown via media query above) ─── */
@@ -3228,11 +3501,15 @@ body.sidebar-collapsed .main-area {
   gap: 6px;
   transition:
     background 0.12s,
-    opacity 0.12s;
+    opacity 0.12s,
+    transform 100ms var(--ease-in);
 }
 .fb-mobile-bar-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+.fb-mobile-bar-btn:active:not(:disabled) {
+  transform: scale(0.97);
 }
 .fb-mobile-bar-btn--outline {
   border: 1px solid var(--border-subtle);

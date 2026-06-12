@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { SectionSchema, SectionType } from '../../types/formBuilder';
+import { ScrollFadeContainer } from '../ScrollFadeContainer';
 import { PRESET_ALLERGIES_SECTION } from '../../types/formBuilder';
 
 interface AddSectionSheetProps {
@@ -100,7 +101,7 @@ export function AddSectionSheet({ onAdd, onClose }: AddSectionSheetProps) {
           </button>
         </div>
 
-        <div className="fb-sheet__body">
+        <ScrollFadeContainer className="fb-sheet__body">
           {step === 'choose-type' ? (
             <>
               {/* Section type tiles */}
@@ -186,7 +187,7 @@ export function AddSectionSheet({ onAdd, onClose }: AddSectionSheetProps) {
               )}
             </>
           )}
-        </div>
+        </ScrollFadeContainer>
 
         {step === 'configure' && (
           <div className="fb-sheet__footer">

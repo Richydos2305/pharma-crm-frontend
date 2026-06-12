@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { FieldSchema, FieldType } from '../../types/formBuilder';
+import { ScrollFadeContainer } from '../ScrollFadeContainer';
 
 interface AddCustomFieldSheetProps {
   onAdd: (field: Omit<FieldSchema, 'id'>) => void;
@@ -107,7 +108,7 @@ export function AddCustomFieldSheet({ onAdd, onClose }: AddCustomFieldSheetProps
           </button>
         </div>
 
-        <div className="fb-sheet__body">
+        <ScrollFadeContainer className="fb-sheet__body">
           {/* Field label */}
           <div className="form-group" style={{ marginBottom: 20 }}>
             <label className="form-label" htmlFor="fb-field-label">
@@ -157,7 +158,7 @@ export function AddCustomFieldSheet({ onAdd, onClose }: AddCustomFieldSheetProps
               <span className="fb-toggle__thumb" />
             </button>
           </div>
-        </div>
+        </ScrollFadeContainer>
 
         <div className="fb-sheet__footer">
           <button type="button" className="btn-ghost" onClick={onClose}>
