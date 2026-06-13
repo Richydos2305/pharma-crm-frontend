@@ -15,20 +15,22 @@ export interface IUser {
   primaryColor?: string;
 }
 
+export interface PatientCustomFieldsSection {
+  name: string;
+  fields: Array<Record<string, unknown>>;
+}
+
 export interface IPatient {
   id: string;
   userId: string;
-  pharmacistName: string;
+  /** Denormalized, backend-derived — read-only from the frontend's perspective */
+  pharmacistName: string[];
   fullName: string;
   age: number;
-  address: string;
   phoneNumber: string;
-  /** @legacy kept for reading pre-form-builder records */
-  prescriptions: string[];
-  /** @legacy kept for reading pre-form-builder records */
-  appointmentDates: string[];
-  notes: string;
-  customFields: Record<string, unknown>;
+  customFields: {
+    sections: PatientCustomFieldsSection[];
+  };
   formSnapshot?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
@@ -85,10 +87,9 @@ export interface CreatePatientPayload {
   fullName: string;
   age: number;
   phoneNumber: string;
-  pharmacistName: string;
-  address?: string;
-  notes?: string;
-  customFields?: Record<string, unknown>;
+  customFields?: {
+    sections: PatientCustomFieldsSection[];
+  };
 }
 
 export type UpdatePatientPayload = Partial<CreatePatientPayload>;

@@ -52,38 +52,45 @@ export function UpdatePatientPage() {
 
       // Always reconcile file fields: upload pending + preserve existing (deletions already done)
       if (Object.keys(fileState).length > 0 || Object.keys(repFileState).length > 0) {
-        const fileCustomFields: Record<string, unknown> = {};
-        for (const [fieldId, fState] of Object.entries(fileState)) {
-          if (fState.pending.length > 0) {
-            const uploaded = await Promise.all(fState.pending.map((f) => uploadPatientFile(id!, f)));
-            fileCustomFields[fieldId] = [...fState.existing, ...uploaded];
-          } else {
-            fileCustomFields[fieldId] = fState.existing;
-          }
-        }
+        const sections = await Promise.all(
+          (payload.customFields?.sections ?? []).map(async (section) => {
+            const schemaSection = schema.sections.find((s) => s.id === section.name);
+            if (!schemaSection) return section;
 
-        // Reconcile repeatable-section file fields
-        for (const [sectionId, rowMap] of Object.entries(repFileState)) {
-          const payloadRows = (payload.customFields?.[sectionId] as Record<string, unknown>[]) ?? [];
-          const rowEntries = Object.entries(rowMap);
-          if (rowEntries.length === 0) continue;
-          const updatedRows = await Promise.all(
-            payloadRows.map(async (rowValues, idx) => {
-              const rowFileState = rowEntries[idx]?.[1] ?? {};
-              const merged: Record<string, unknown> = { ...(rowValues as Record<string, unknown>) };
-              for (const [fieldId, fstate] of Object.entries(rowFileState)) {
-                const uploaded = fstate.pending.length > 0 ? await Promise.all(fstate.pending.map((f) => uploadPatientFile(id!, f))) : [];
-                merged[fieldId] = [...fstate.existing, ...uploaded];
+            if (schemaSection.type === 'standard') {
+              const fileFields = schemaSection.fields.filter((f) => f.type === 'file');
+              if (fileFields.length === 0) return section;
+              const fieldsRow = { ...(section.fields[0] ?? {}) };
+              for (const field of fileFields) {
+                const fState = fileState[field.id];
+                if (!fState) continue;
+                const uploaded = fState.pending.length > 0 ? await Promise.all(fState.pending.map((f) => uploadPatientFile(id!, f))) : [];
+                fieldsRow[field.id] = [...fState.existing, ...uploaded];
               }
-              return merged;
-            })
-          );
-          fileCustomFields[sectionId] = updatedRows;
-        }
+              return { name: section.name, fields: [fieldsRow] };
+            }
 
-        await updatePatient(id!, {
-          customFields: { ...(payload.customFields ?? {}), ...fileCustomFields }
-        });
+            // Repeatable section
+            const rowMap = repFileState[section.name];
+            if (!rowMap) return section;
+            const rowEntries = Object.entries(rowMap);
+            if (rowEntries.length === 0) return section;
+            const fields = await Promise.all(
+              section.fields.map(async (rowValues, idx) => {
+                const rowFileState = rowEntries[idx]?.[1] ?? {};
+                const merged: Record<string, unknown> = { ...rowValues };
+                for (const [fieldId, fstate] of Object.entries(rowFileState)) {
+                  const uploaded = fstate.pending.length > 0 ? await Promise.all(fstate.pending.map((f) => uploadPatientFile(id!, f))) : [];
+                  merged[fieldId] = [...fstate.existing, ...uploaded];
+                }
+                return merged;
+              })
+            );
+            return { name: section.name, fields };
+          })
+        );
+
+        await updatePatient(id!, { customFields: { sections } });
       }
 
       queryClient.invalidateQueries({ queryKey: queryKeys.patients.all });
@@ -106,9 +113,13 @@ export function UpdatePatientPage() {
   });
 
   async function handleExistingFileDeleted(fieldId: string, remaining: import('../../types').FileMetadata[]) {
-    const currentCustomFields = { ...(patient?.customFields ?? {}) };
-    currentCustomFields[fieldId] = remaining;
-    await updatePatient(id!, { customFields: currentCustomFields });
+    const sections = (patient?.customFields?.sections ?? []).map((s) => {
+      if (s.fields[0] && fieldId in s.fields[0]) {
+        return { name: s.name, fields: [{ ...s.fields[0], [fieldId]: remaining }] };
+      }
+      return s;
+    });
+    await updatePatient(id!, { customFields: { sections } });
     queryClient.invalidateQueries({ queryKey: queryKeys.patients.detail(id!) });
   }
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { hydrateState, hydrateFileState, buildPayload } from './schemaFormUtils';
+import { hydrateState, hydrateFileState, buildPayload, getLastAppointmentDate } from './schemaFormUtils';
 import type { FormSchema, SectionSchema, FieldSchema } from '../types/formBuilder';
 import type { IPatient, FileMetadata } from '../types';
 
@@ -8,15 +8,11 @@ import type { IPatient, FileMetadata } from '../types';
 const createMockPatient = (overrides: Partial<IPatient> = {}): IPatient => ({
   id: 'patient-1',
   userId: 'user-1',
-  pharmacistName: 'Dr. Smith',
+  pharmacistName: ['Dr. Smith'],
   fullName: 'Jane Doe',
   age: 30,
-  address: '123 Main St',
   phoneNumber: '08012345678',
-  prescriptions: [],
-  appointmentDates: [],
-  notes: '',
-  customFields: {},
+  customFields: { sections: [] },
   createdAt: '2024-01-01T00:00:00.000Z',
   updatedAt: '2024-01-01T00:00:00.000Z',
   ...overrides
@@ -106,12 +102,25 @@ describe('hydrateState', () => {
       expect((state['personal-info'] as Record<string, string>)['core-age']).toBe('');
     });
 
-    it('should map core-phone, core-address, core-notes and core-attended-by to their patient fields', () => {
+    it('should map core-phone to patient.phoneNumber', () => {
+      const schema = createMockFormSchema([
+        createStandardSection({
+          id: 'personal-info',
+          fields: [createField({ id: 'core-phone', type: 'short_text' })]
+        })
+      ]);
+      const patient = createMockPatient({ phoneNumber: '08012345678' });
+
+      const state = hydrateState(schema, patient);
+
+      expect((state['personal-info'] as Record<string, string>)['core-phone']).toBe('08012345678');
+    });
+
+    it('should read core-address, core-notes and core-attended-by from customFields.sections via the generic path', () => {
       const schema = createMockFormSchema([
         createStandardSection({
           id: 'personal-info',
           fields: [
-            createField({ id: 'core-phone', type: 'short_text' }),
             createField({ id: 'core-address', type: 'short_text' }),
             createField({ id: 'core-notes', type: 'textarea' }),
             createField({ id: 'core-attended-by', type: 'relation' })
@@ -119,16 +128,19 @@ describe('hydrateState', () => {
         })
       ]);
       const patient = createMockPatient({
-        phoneNumber: '08012345678',
-        address: '123 Main St',
-        notes: 'Some notes',
-        pharmacistName: 'Dr. Adams'
+        customFields: {
+          sections: [
+            {
+              name: 'personal-info',
+              fields: [{ 'core-address': '123 Main St', 'core-notes': 'Some notes', 'core-attended-by': 'Dr. Adams' }]
+            }
+          ]
+        }
       });
 
       const state = hydrateState(schema, patient);
       const values = state['personal-info'] as Record<string, string>;
 
-      expect(values['core-phone']).toBe('08012345678');
       expect(values['core-address']).toBe('123 Main St');
       expect(values['core-notes']).toBe('Some notes');
       expect(values['core-attended-by']).toBe('Dr. Adams');
@@ -150,7 +162,7 @@ describe('hydrateState', () => {
   });
 
   describe('standard section — appointment date', () => {
-    it('should read core-appointment-date from customFields when present', () => {
+    it('should read core-appointment-date from the matching customFields section', () => {
       const schema = createMockFormSchema([
         createStandardSection({
           id: 'medical',
@@ -158,7 +170,7 @@ describe('hydrateState', () => {
         })
       ]);
       const patient = createMockPatient({
-        customFields: { 'core-appointment-date': '2024-06-15' }
+        customFields: { sections: [{ name: 'medical', fields: [{ 'core-appointment-date': '2024-06-15' }] }] }
       });
 
       const state = hydrateState(schema, patient);
@@ -166,31 +178,28 @@ describe('hydrateState', () => {
       expect((state['medical'] as Record<string, string>)['core-appointment-date']).toBe('2024-06-15');
     });
 
-    it('should fall back to the last appointmentDates entry formatted as YYYY-MM-DD', () => {
+    it('should return empty string when the section has no matching customFields entry', () => {
       const schema = createMockFormSchema([
         createStandardSection({
           id: 'medical',
           fields: [createField({ id: 'core-appointment-date', type: 'date' })]
         })
       ]);
-      const patient = createMockPatient({
-        customFields: {},
-        appointmentDates: ['2024-01-01T00:00:00.000Z', '2024-06-15T00:00:00.000Z']
-      });
+      const patient = createMockPatient({ customFields: { sections: [] } });
 
       const state = hydrateState(schema, patient);
 
-      expect((state['medical'] as Record<string, string>)['core-appointment-date']).toBe('2024-06-15');
+      expect((state['medical'] as Record<string, string>)['core-appointment-date']).toBe('');
     });
 
-    it('should return empty string when neither customFields nor appointmentDates are present', () => {
+    it('should return empty string when the field is absent from the matching section', () => {
       const schema = createMockFormSchema([
         createStandardSection({
           id: 'medical',
           fields: [createField({ id: 'core-appointment-date', type: 'date' })]
         })
       ]);
-      const patient = createMockPatient({ customFields: {}, appointmentDates: [] });
+      const patient = createMockPatient({ customFields: { sections: [{ name: 'medical', fields: [{}] }] } });
 
       const state = hydrateState(schema, patient);
 
@@ -206,7 +215,7 @@ describe('hydrateState', () => {
           fields: [createField({ id: 'blood-type', type: 'short_text' })]
         })
       ]);
-      const patient = createMockPatient({ customFields: { 'blood-type': 'O+' } });
+      const patient = createMockPatient({ customFields: { sections: [{ name: 'extra', fields: [{ 'blood-type': 'O+' }] }] } });
 
       const state = hydrateState(schema, patient);
 
@@ -220,7 +229,7 @@ describe('hydrateState', () => {
           fields: [createField({ id: 'blood-type', type: 'short_text' })]
         })
       ]);
-      const patient = createMockPatient({ customFields: {} });
+      const patient = createMockPatient({ customFields: { sections: [] } });
 
       const state = hydrateState(schema, patient);
 
@@ -229,7 +238,7 @@ describe('hydrateState', () => {
   });
 
   describe('repeatable section — prescriptions', () => {
-    it('should hydrate core-prescriptions from customFields in the new row-object format', () => {
+    it('should hydrate core-prescriptions from customFields.sections', () => {
       const schema = createMockFormSchema([
         createRepeatableSection({
           id: 'core-prescriptions',
@@ -238,7 +247,12 @@ describe('hydrateState', () => {
       ]);
       const patient = createMockPatient({
         customFields: {
-          'core-prescriptions': [{ 'core-prescription-text': 'Amoxicillin 500mg' }, { 'core-prescription-text': 'Ibuprofen 400mg' }]
+          sections: [
+            {
+              name: 'core-prescriptions',
+              fields: [{ 'core-prescription-text': 'Amoxicillin 500mg' }, { 'core-prescription-text': 'Ibuprofen 400mg' }]
+            }
+          ]
         }
       });
 
@@ -248,40 +262,6 @@ describe('hydrateState', () => {
       expect(rows).toHaveLength(2);
       expect(rows[0].values['core-prescription-text']).toBe('Amoxicillin 500mg');
       expect(rows[1].values['core-prescription-text']).toBe('Ibuprofen 400mg');
-    });
-
-    it('should fall back to the legacy patient.prescriptions string array', () => {
-      const schema = createMockFormSchema([
-        createRepeatableSection({
-          id: 'core-prescriptions',
-          fields: [createField({ id: 'core-prescription-text', type: 'textarea' })]
-        })
-      ]);
-      const patient = createMockPatient({
-        customFields: {},
-        prescriptions: ['Amoxicillin 500mg', 'Ibuprofen 400mg']
-      });
-
-      const state = hydrateState(schema, patient);
-      const rows = state['core-prescriptions'] as Array<{ rowId: string; values: Record<string, string> }>;
-
-      expect(rows).toHaveLength(2);
-      expect(rows[0].values['core-prescription-text']).toBe('Amoxicillin 500mg');
-      expect(rows[1].values['core-prescription-text']).toBe('Ibuprofen 400mg');
-    });
-
-    it('should return an empty array when both customFields and patient.prescriptions are absent or empty', () => {
-      const schema = createMockFormSchema([
-        createRepeatableSection({
-          id: 'core-prescriptions',
-          fields: [createField({ id: 'core-prescription-text', type: 'textarea' })]
-        })
-      ]);
-      const patient = createMockPatient({ customFields: {}, prescriptions: [] });
-
-      const state = hydrateState(schema, patient);
-
-      expect(state['core-prescriptions']).toEqual([]);
     });
   });
 
@@ -295,7 +275,7 @@ describe('hydrateState', () => {
       ]);
       const patient = createMockPatient({
         customFields: {
-          allergies: [{ 'allergy-name': 'Peanuts' }, { 'allergy-name': 'Latex' }]
+          sections: [{ name: 'allergies', fields: [{ 'allergy-name': 'Peanuts' }, { 'allergy-name': 'Latex' }] }]
         }
       });
 
@@ -313,7 +293,7 @@ describe('hydrateState', () => {
           fields: [createField({ id: 'allergy-name', type: 'short_text' })]
         })
       ]);
-      const patient = createMockPatient({ customFields: {} });
+      const patient = createMockPatient({ customFields: { sections: [] } });
 
       const state = hydrateState(schema, patient);
 
@@ -330,7 +310,7 @@ describe('hydrateState', () => {
       ]);
       const patient = createMockPatient({
         customFields: {
-          visits: [{ 'visit-date': '2024-06-15', 'lab-results': fileData }]
+          sections: [{ name: 'visits', fields: [{ 'visit-date': '2024-06-15', 'lab-results': fileData }] }]
         }
       });
 
@@ -352,7 +332,7 @@ describe('hydrateFileState', () => {
         fields: [createField({ id: 'id-scan', type: 'file' })]
       })
     ]);
-    const patient = createMockPatient({ customFields: {} });
+    const patient = createMockPatient({ customFields: { sections: [] } });
 
     const fileState = hydrateFileState(schema, patient);
 
@@ -367,7 +347,7 @@ describe('hydrateFileState', () => {
         fields: [createField({ id: 'id-scan', type: 'file' })]
       })
     ]);
-    const patient = createMockPatient({ customFields: { 'id-scan': [file] } });
+    const patient = createMockPatient({ customFields: { sections: [{ name: 'docs', fields: [{ 'id-scan': [file] }] }] } });
 
     const fileState = hydrateFileState(schema, patient);
 
@@ -405,11 +385,57 @@ describe('hydrateFileState', () => {
   });
 });
 
+// ─── getLastAppointmentDate ───────────────────────────────────────────────────
+
+describe('getLastAppointmentDate', () => {
+  it('should return the max date across multiple sections each containing core-appointment-date', () => {
+    const patient = createMockPatient({
+      customFields: {
+        sections: [
+          { name: 'medical', fields: [{ 'core-appointment-date': '2024-01-01' }] },
+          { name: 'visits', fields: [{ 'core-appointment-date': '2024-06-15' }] }
+        ]
+      }
+    });
+
+    expect(getLastAppointmentDate(patient)).toBe('2024-06-15');
+  });
+
+  it('should return the max date across multiple rows of a repeatable section', () => {
+    const patient = createMockPatient({
+      customFields: {
+        sections: [
+          {
+            name: 'visits',
+            fields: [{ 'core-appointment-date': '2024-01-01' }, { 'core-appointment-date': '2024-06-15' }, { 'core-appointment-date': '2024-03-10' }]
+          }
+        ]
+      }
+    });
+
+    expect(getLastAppointmentDate(patient)).toBe('2024-06-15');
+  });
+
+  it('should return null when no section/row has a core-appointment-date value', () => {
+    const patient = createMockPatient({
+      customFields: { sections: [{ name: 'medical', fields: [{ 'core-attended-by': 'Dr. Adams' }] }] }
+    });
+
+    expect(getLastAppointmentDate(patient)).toBeNull();
+  });
+
+  it('should return null for customFields: { sections: [] }', () => {
+    const patient = createMockPatient({ customFields: { sections: [] } });
+
+    expect(getLastAppointmentDate(patient)).toBeNull();
+  });
+});
+
 // ─── buildPayload ─────────────────────────────────────────────────────────────
 
 describe('buildPayload', () => {
   describe('core fields', () => {
-    it('should map core text fields to top-level payload properties', () => {
+    it('should map core text fields to top-level payload properties and non-core fields into the section', () => {
       const schema = createMockFormSchema([
         createStandardSection({
           id: 'personal-info',
@@ -431,11 +457,11 @@ describe('buildPayload', () => {
       };
 
       const payload = buildPayload(schema, state);
+      const section = payload.customFields?.sections.find((s) => s.name === 'personal-info');
 
       expect(payload.fullName).toBe('Jane Doe');
       expect(payload.phoneNumber).toBe('08012345678');
-      expect(payload.address).toBe('123 Main St');
-      expect(payload.notes).toBe('Healthy');
+      expect(section?.fields[0]).toMatchObject({ 'core-address': '123 Main St', 'core-notes': 'Healthy' });
     });
 
     it('should convert core-age to a number', () => {
@@ -466,7 +492,7 @@ describe('buildPayload', () => {
       expect(payload.age).toBe(0);
     });
 
-    it('should include pharmacistName in the payload when isUpdate is false', () => {
+    it('should put core-attended-by into the section fields regardless of isUpdate, and never set pharmacistName', () => {
       const schema = createMockFormSchema([
         createStandardSection({
           id: 'medical',
@@ -475,45 +501,36 @@ describe('buildPayload', () => {
       ]);
       const state = { medical: { 'core-attended-by': 'Dr. Adams' } };
 
-      const payload = buildPayload(schema, state, false);
+      const createPayload = buildPayload(schema, state, false);
+      const updatePayload = buildPayload(schema, state, true);
 
-      expect(payload.pharmacistName).toBe('Dr. Adams');
+      expect(createPayload.customFields?.sections.find((s) => s.name === 'medical')?.fields[0]).toMatchObject({
+        'core-attended-by': 'Dr. Adams'
+      });
+      expect(updatePayload.customFields?.sections.find((s) => s.name === 'medical')?.fields[0]).toMatchObject({
+        'core-attended-by': 'Dr. Adams'
+      });
+      expect(createPayload).not.toHaveProperty('pharmacistName');
+      expect(updatePayload).not.toHaveProperty('pharmacistName');
     });
 
-    it('should omit pharmacistName from the payload when isUpdate is true', () => {
-      const schema = createMockFormSchema([
-        createStandardSection({
-          id: 'medical',
-          fields: [createField({ id: 'core-attended-by', type: 'relation' })]
-        })
-      ]);
-      const state = { medical: { 'core-attended-by': 'Dr. Adams' } };
-
-      const payload = buildPayload(schema, state, true);
-
-      expect(payload.pharmacistName).toBeUndefined();
-    });
-
-    it('should omit core text fields from the payload when their value is an empty string', () => {
+    it('should omit core-full-name from the payload when its value is an empty string', () => {
       const schema = createMockFormSchema([
         createStandardSection({
           id: 'personal-info',
-          fields: [createField({ id: 'core-full-name', type: 'short_text' }), createField({ id: 'core-address', type: 'short_text' })]
+          fields: [createField({ id: 'core-full-name', type: 'short_text' })]
         })
       ]);
-      const state = {
-        'personal-info': { 'core-full-name': '', 'core-address': '' }
-      };
+      const state = { 'personal-info': { 'core-full-name': '' } };
 
       const payload = buildPayload(schema, state);
 
       expect(payload.fullName).toBeUndefined();
-      expect(payload.address).toBeUndefined();
     });
   });
 
   describe('custom fields', () => {
-    it('should put non-core field values into payload.customFields', () => {
+    it('should put non-core field values into the matching customFields section', () => {
       const schema = createMockFormSchema([
         createStandardSection({
           id: 'extra',
@@ -523,11 +540,12 @@ describe('buildPayload', () => {
       const state = { extra: { 'blood-type': 'O+' } };
 
       const payload = buildPayload(schema, state);
+      const section = payload.customFields?.sections.find((s) => s.name === 'extra');
 
-      expect(payload.customFields?.['blood-type']).toBe('O+');
+      expect(section?.fields[0]).toEqual({ 'blood-type': 'O+' });
     });
 
-    it('should omit non-core fields with empty string values from customFields', () => {
+    it('should omit non-core fields with empty string values from the section', () => {
       const schema = createMockFormSchema([
         createStandardSection({
           id: 'extra',
@@ -537,11 +555,12 @@ describe('buildPayload', () => {
       const state = { extra: { 'blood-type': '' } };
 
       const payload = buildPayload(schema, state);
+      const section = payload.customFields?.sections.find((s) => s.name === 'extra');
 
-      expect(payload.customFields).not.toHaveProperty('blood-type');
+      expect(section?.fields[0]).not.toHaveProperty('blood-type');
     });
 
-    it('should skip file-type fields and not include them in customFields', () => {
+    it('should skip file-type fields and not include them in the section', () => {
       const schema = createMockFormSchema([
         createStandardSection({
           id: 'docs',
@@ -551,13 +570,29 @@ describe('buildPayload', () => {
       const state = { docs: {} };
 
       const payload = buildPayload(schema, state);
+      const section = payload.customFields?.sections.find((s) => s.name === 'docs');
 
-      expect(payload.customFields).not.toHaveProperty('id-scan');
+      expect(section?.fields[0]).not.toHaveProperty('id-scan');
+    });
+
+    it('should include an entry in customFields.sections for every schema section, including empty ones', () => {
+      const schema = createMockFormSchema([
+        createStandardSection({ id: 'personal-info', fields: [createField({ id: 'core-full-name', type: 'short_text' })] }),
+        createRepeatableSection({ id: 'visits', fields: [createField({ id: 'visit-date', type: 'date' })] })
+      ]);
+      const state = {};
+
+      const payload = buildPayload(schema, state);
+
+      expect(payload.customFields?.sections).toHaveLength(schema.sections.length);
+      payload.customFields?.sections.forEach((section, i) => {
+        expect(section.name).toBe(schema.sections[i].id);
+      });
     });
   });
 
   describe('repeatable sections', () => {
-    it('should serialise rows into customFields keyed by section id', () => {
+    it('should serialise rows into the matching customFields.sections entry', () => {
       const schema = createMockFormSchema([
         createRepeatableSection({
           id: 'core-prescriptions',
@@ -572,14 +607,12 @@ describe('buildPayload', () => {
       };
 
       const payload = buildPayload(schema, state);
+      const section = payload.customFields?.sections.find((s) => s.name === 'core-prescriptions');
 
-      expect(payload.customFields?.['core-prescriptions']).toEqual([
-        { 'core-prescription-text': 'Amoxicillin 500mg' },
-        { 'core-prescription-text': 'Ibuprofen 400mg' }
-      ]);
+      expect(section?.fields).toEqual([{ 'core-prescription-text': 'Amoxicillin 500mg' }, { 'core-prescription-text': 'Ibuprofen 400mg' }]);
     });
 
-    it('should omit a repeatable section from customFields when its rows are empty', () => {
+    it('should still include the section in customFields.sections with an empty fields array when rows are empty', () => {
       const schema = createMockFormSchema([
         createRepeatableSection({
           id: 'core-prescriptions',
@@ -589,8 +622,9 @@ describe('buildPayload', () => {
       const state = { 'core-prescriptions': [] };
 
       const payload = buildPayload(schema, state);
+      const section = payload.customFields?.sections.find((s) => s.name === 'core-prescriptions');
 
-      expect(payload.customFields).not.toHaveProperty('core-prescriptions');
+      expect(section?.fields).toEqual([]);
     });
 
     it('should strip file-type field values from repeatable rows before serialising', () => {
@@ -605,7 +639,8 @@ describe('buildPayload', () => {
       };
 
       const payload = buildPayload(schema, state);
-      const rows = payload.customFields?.['visits'] as Array<Record<string, string>>;
+      const section = payload.customFields?.sections.find((s) => s.name === 'visits');
+      const rows = section?.fields as Array<Record<string, string>>;
 
       expect(rows[0]).toHaveProperty('visit-date', '2024-06-15');
       expect(rows[0]).not.toHaveProperty('lab-results');
