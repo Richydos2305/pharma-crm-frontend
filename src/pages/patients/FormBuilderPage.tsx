@@ -11,6 +11,7 @@ import type { FormSchema, SectionSchema, FieldSchema } from '../../types/formBui
 import { STARTER_TEMPLATES, PERSONAL_INFO_SECTION } from '../../types/formBuilder';
 import { getSettings, publishFormSchema } from '../../api/settings';
 import { queryKeys } from '../../api/queryKeys';
+import { uniqueSlugId } from '../../utils/slugify';
 
 type BuilderMode = 'build' | 'preview';
 
@@ -120,7 +121,7 @@ export function FormBuilderPage() {
     if (!initializedFromSettings.current && settingsData?.formConfig?.schema) {
       initializedFromSettings.current = true;
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSchema(settingsData.formConfig.schema as FormSchema);
+      setSchema({ ...(settingsData.formConfig.schema as FormSchema), status: 'published' });
     }
   }, [settingsData]);
 
@@ -159,9 +160,14 @@ export function FormBuilderPage() {
 
   const addSection = useCallback(
     (sectionData: Omit<SectionSchema, 'id'>) => {
-      const newSection: SectionSchema = { ...sectionData, id: uid() };
-      setSchema((prev) => (prev ? { ...prev, sections: [...prev.sections, newSection] } : prev));
-      setSelectedSectionId(newSection.id);
+      let newSectionId = '';
+      setSchema((prev) => {
+        if (!prev) return prev;
+        const existingIds = prev.sections.map((s) => s.id);
+        newSectionId = uniqueSlugId(sectionData.name, existingIds);
+        return { ...prev, sections: [...prev.sections, { ...sectionData, id: newSectionId }] };
+      });
+      if (newSectionId) setSelectedSectionId(newSectionId);
       markModified();
     },
     [markModified]
@@ -179,15 +185,15 @@ export function FormBuilderPage() {
   }
 
   function addField(sectionId: string, field: Omit<FieldSchema, 'id'>) {
-    const newField: FieldSchema = { ...field, id: uid() };
-    setSchema((prev) =>
-      prev
-        ? {
-            ...prev,
-            sections: prev.sections.map((s) => (s.id === sectionId ? { ...s, fields: [...s.fields, newField] } : s))
-          }
-        : prev
-    );
+    setSchema((prev) => {
+      if (!prev) return prev;
+      const existingIds = prev.sections.flatMap((s) => s.fields.map((f) => f.id));
+      const newField: FieldSchema = { ...field, id: uniqueSlugId(field.label, existingIds) };
+      return {
+        ...prev,
+        sections: prev.sections.map((s) => (s.id === sectionId ? { ...s, fields: [...s.fields, newField] } : s))
+      };
+    });
     markModified();
   }
 

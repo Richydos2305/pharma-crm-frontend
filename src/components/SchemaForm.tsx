@@ -2,24 +2,12 @@ import { useState } from 'react';
 import type { FormSchema, FieldSchema, SectionSchema } from '../types/formBuilder';
 import type { IPharmacist, CreatePatientPayload, FileMetadata } from '../types';
 import { deletePatientFile } from '../api/patients';
+import { buildPayload } from './schemaFormUtils';
 import type { FileFieldState, FileState, RepeatableFileState, RepeatableRow, FormState } from './schemaFormUtils';
 
 // ─── Private type aliases ─────────────────────────────────────────────────────
 
 type FieldValues = Record<string, string>;
-
-// ─── Core field mapping ───────────────────────────────────────────────────────
-// Fields with these IDs map to top-level patient fields (not customFields).
-// Everything else (including core-appointment-date) goes into customFields.
-
-const CORE_TOP_LEVEL: Record<string, string> = {
-  'core-full-name': 'fullName',
-  'core-age': 'age',
-  'core-phone': 'phoneNumber',
-  'core-address': 'address',
-  'core-attended-by': 'pharmacistName',
-  'core-notes': 'notes'
-};
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -67,69 +55,6 @@ function initRepeatableFileState(schema: FormSchema, initialState?: FormState): 
     }
   }
   return rfs;
-}
-
-// ─── Build API payload from form state ───────────────────────────────────────
-
-function buildPayload(schema: FormSchema, state: FormState, isUpdate = false): CreatePatientPayload {
-  const payload: Record<string, unknown> = {};
-  const customFields: Record<string, unknown> = {};
-
-  for (const section of schema.sections) {
-    if (section.type === 'standard') {
-      const values = (state[section.id] as FieldValues) ?? {};
-      for (const field of section.fields) {
-        if (field.type === 'file') continue; // files uploaded post-save
-        const value = values[field.id] ?? '';
-        const coreKey = CORE_TOP_LEVEL[field.id];
-        if (coreKey) {
-          // pharmacistName is set at creation only — never send on update
-          if (isUpdate && coreKey === 'pharmacistName') continue;
-          if (coreKey === 'age') {
-            payload[coreKey] = value ? Number(value) : 0;
-          } else if (value) {
-            payload[coreKey] = value;
-          }
-        } else if (value) {
-          // core-appointment-date and all custom fields go here
-          customFields[field.id] = value;
-        }
-      }
-    } else {
-      // Repeatable: all rows go to customFields keyed by section.id.
-      // If a relation field (pharmacist picker) is in a repeatable section,
-      // promote the last row's value to top-level pharmacistName.
-      const rows = (state[section.id] as RepeatableRow[]) ?? [];
-      if (rows.length > 0) {
-        // Build a map of fieldId -> FieldSchema for this section
-        const fieldMap = Object.fromEntries(section.fields.map((f) => [f.id, f]));
-        const filteredRows = rows.map((r) => {
-          const rowValues: FieldValues = {};
-          for (const [fieldId, value] of Object.entries(r.values)) {
-            if (fieldMap[fieldId]?.type === 'file') continue; // files handled via repFileState
-            rowValues[fieldId] = value;
-            const coreKey = CORE_TOP_LEVEL[fieldId];
-            const isRelation = fieldMap[fieldId]?.type === 'relation';
-            if (coreKey || isRelation) {
-              // Promote to top-level; last row wins (e.g. pharmacistName)
-              const key = coreKey ?? 'pharmacistName';
-              if (isUpdate && key === 'pharmacistName') continue;
-              if (key === 'age') {
-                payload[key] = value ? Number(value) : 0;
-              } else if (value) {
-                payload[key] = value;
-              }
-            }
-          }
-          return rowValues;
-        });
-        customFields[section.id] = filteredRows;
-      }
-    }
-  }
-
-  payload.customFields = customFields;
-  return payload as unknown as CreatePatientPayload;
 }
 
 // ─── Field input renderer ─────────────────────────────────────────────────────
