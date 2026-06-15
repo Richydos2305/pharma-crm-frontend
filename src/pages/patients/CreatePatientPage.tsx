@@ -43,42 +43,51 @@ export function CreatePatientPage() {
       const patient = await createPatient(payload);
 
       // Upload any pending files and write metadata back to customFields
-      const fileCustomFields: Record<string, unknown> = {};
       let hasFiles = false;
-      for (const [fieldId, fState] of Object.entries(fileState)) {
-        if (fState.pending.length > 0) {
-          hasFiles = true;
-          const uploaded = await Promise.all(fState.pending.map((f) => uploadPatientFile(patient.id, f)));
-          fileCustomFields[fieldId] = uploaded;
-        }
-      }
+      const sections = await Promise.all(
+        (payload.customFields?.sections ?? []).map(async (section) => {
+          const schemaSection = schema.sections.find((s) => s.id === section.name);
+          if (!schemaSection) return section;
 
-      // Upload repeatable-section file fields
-      for (const [sectionId, rowMap] of Object.entries(repFileState)) {
-        const payloadRows = (payload.customFields?.[sectionId] as Record<string, unknown>[]) ?? [];
-        const rowEntries = Object.entries(rowMap);
-        if (rowEntries.length === 0) continue;
-        const updatedRows = await Promise.all(
-          payloadRows.map(async (rowValues, idx) => {
-            const rowFileState = rowEntries[idx]?.[1] ?? {};
-            const merged: Record<string, unknown> = { ...(rowValues as Record<string, unknown>) };
-            for (const [fieldId, fstate] of Object.entries(rowFileState)) {
-              if (fstate.pending.length > 0) {
-                const uploaded = await Promise.all(fstate.pending.map((f) => uploadPatientFile(patient.id, f)));
-                merged[fieldId] = uploaded;
-              }
+          if (schemaSection.type === 'standard') {
+            const fileFields = schemaSection.fields.filter((f) => f.type === 'file');
+            if (fileFields.length === 0) return section;
+            const fieldsRow = { ...(section.fields[0] ?? {}) };
+            for (const field of fileFields) {
+              const fState = fileState[field.id];
+              if (!fState || fState.pending.length === 0) continue;
+              hasFiles = true;
+              const uploaded = await Promise.all(fState.pending.map((f) => uploadPatientFile(patient.id, f)));
+              fieldsRow[field.id] = uploaded;
             }
-            return merged;
-          })
-        );
-        fileCustomFields[sectionId] = updatedRows;
-        hasFiles = true;
-      }
+            return { name: section.name, fields: [fieldsRow] };
+          }
+
+          // Repeatable section
+          const rowMap = repFileState[section.name];
+          if (!rowMap) return section;
+          const rowEntries = Object.entries(rowMap);
+          if (rowEntries.length === 0) return section;
+          const fields = await Promise.all(
+            section.fields.map(async (rowValues, idx) => {
+              const rowFileState = rowEntries[idx]?.[1] ?? {};
+              const merged: Record<string, unknown> = { ...rowValues };
+              for (const [fieldId, fstate] of Object.entries(rowFileState)) {
+                if (fstate.pending.length > 0) {
+                  hasFiles = true;
+                  const uploaded = await Promise.all(fstate.pending.map((f) => uploadPatientFile(patient.id, f)));
+                  merged[fieldId] = uploaded;
+                }
+              }
+              return merged;
+            })
+          );
+          return { name: section.name, fields };
+        })
+      );
 
       if (hasFiles) {
-        await updatePatient(patient.id, {
-          customFields: { ...(payload.customFields ?? {}), ...fileCustomFields }
-        });
+        await updatePatient(patient.id, { customFields: { sections } });
       }
 
       queryClient.invalidateQueries({ queryKey: queryKeys.patients.all });

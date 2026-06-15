@@ -17,15 +17,11 @@ afterAll(() => server.close());
 const createMockPatient = (overrides: Partial<IPatient> = {}): IPatient => ({
   id: 'patient-1',
   userId: 'user-1',
-  pharmacistName: 'Dr. Smith',
+  pharmacistName: ['Dr. Smith'],
   fullName: 'Jane Doe',
   age: 35,
-  address: '123 Main St',
   phoneNumber: '08012345678',
-  prescriptions: [],
-  appointmentDates: [],
-  notes: '',
-  customFields: {},
+  customFields: { sections: [] },
   createdAt: '2024-01-01T00:00:00.000Z',
   updatedAt: '2024-01-01T00:00:00.000Z',
   ...overrides
@@ -110,7 +106,7 @@ describe('getPatient', () => {
 describe('createPatient', () => {
   it('should POST to /api/patients with a minimal payload — required fields only, no customFields', async () => {
     let capturedBody: unknown;
-    const patient = createMockPatient({ customFields: {} });
+    const patient = createMockPatient();
 
     server.use(
       http.post(`${BASE}/api/patients`, async ({ request }) => {
@@ -119,13 +115,12 @@ describe('createPatient', () => {
       })
     );
 
-    await createPatient({ fullName: 'Jane Doe', age: 35, phoneNumber: '08012345678', pharmacistName: 'Dr. Smith' });
+    await createPatient({ fullName: 'Jane Doe', age: 35, phoneNumber: '08012345678' });
 
     expect(capturedBody).toEqual({
       fullName: 'Jane Doe',
       age: 35,
-      phoneNumber: '08012345678',
-      pharmacistName: 'Dr. Smith'
+      phoneNumber: '08012345678'
     });
   });
 
@@ -143,13 +138,11 @@ describe('createPatient', () => {
       fullName: 'Jane Doe',
       age: 35,
       phoneNumber: '08012345678',
-      pharmacistName: 'Dr. Smith',
-      customFields: { diagnosis: 'Hypertension', 'bp-reading': 120 }
+      customFields: { sections: [{ name: 'medical-info', fields: [{ diagnosis: 'Hypertension', 'bp-reading': 120 }] }] }
     });
 
     expect((capturedBody as Record<string, unknown>).customFields).toEqual({
-      diagnosis: 'Hypertension',
-      'bp-reading': 120
+      sections: [{ name: 'medical-info', fields: [{ diagnosis: 'Hypertension', 'bp-reading': 120 }] }]
     });
   });
 
@@ -167,13 +160,11 @@ describe('createPatient', () => {
       fullName: 'Jane Doe',
       age: 35,
       phoneNumber: '08012345678',
-      pharmacistName: 'Dr. Smith',
-      customFields: { 'blood-group': 'A+', 'condition-severity': 'moderate' }
+      customFields: { sections: [{ name: 'medical-info', fields: [{ 'blood-group': 'A+', 'condition-severity': 'moderate' }] }] }
     });
 
     expect((capturedBody as Record<string, unknown>).customFields).toEqual({
-      'blood-group': 'A+',
-      'condition-severity': 'moderate'
+      sections: [{ name: 'medical-info', fields: [{ 'blood-group': 'A+', 'condition-severity': 'moderate' }] }]
     });
   });
 
@@ -193,13 +184,14 @@ describe('createPatient', () => {
       fullName: 'Jane Doe',
       age: 35,
       phoneNumber: '08012345678',
-      pharmacistName: 'Dr. Smith',
-      customFields: { diagnosis: 'Hypertension' }
+      customFields: { sections: [{ name: 'medical-info', fields: [{ diagnosis: 'Hypertension' }] }] }
     });
 
-    const body = capturedBody as Record<string, unknown>;
-    expect(body.customFields).not.toHaveProperty('result-scan');
-    expect(body.customFields).not.toHaveProperty('lab-report');
+    const customFields = (capturedBody as Record<string, unknown>).customFields as {
+      sections: Array<{ name: string; fields: Array<Record<string, unknown>> }>;
+    };
+    expect(customFields.sections[0].fields[0]).not.toHaveProperty('result-scan');
+    expect(customFields.sections[0].fields[0]).not.toHaveProperty('lab-report');
   });
 
   it('should POST with repeatable section rows containing text and number values', async () => {
@@ -216,19 +208,28 @@ describe('createPatient', () => {
       fullName: 'Jane Doe',
       age: 35,
       phoneNumber: '08012345678',
-      pharmacistName: 'Dr. Smith',
       customFields: {
-        prescriptions: [
-          { 'drug-name': 'Aspirin', dosage: 100 },
-          { 'drug-name': 'Lisinopril', dosage: 10 }
+        sections: [
+          {
+            name: 'core-prescriptions',
+            fields: [
+              { 'drug-name': 'Aspirin', dosage: 100 },
+              { 'drug-name': 'Lisinopril', dosage: 10 }
+            ]
+          }
         ]
       }
     });
 
     expect((capturedBody as Record<string, unknown>).customFields).toEqual({
-      prescriptions: [
-        { 'drug-name': 'Aspirin', dosage: 100 },
-        { 'drug-name': 'Lisinopril', dosage: 10 }
+      sections: [
+        {
+          name: 'core-prescriptions',
+          fields: [
+            { 'drug-name': 'Aspirin', dosage: 100 },
+            { 'drug-name': 'Lisinopril', dosage: 10 }
+          ]
+        }
       ]
     });
   });
@@ -247,19 +248,28 @@ describe('createPatient', () => {
       fullName: 'Jane Doe',
       age: 35,
       phoneNumber: '08012345678',
-      pharmacistName: 'Dr. Smith',
       customFields: {
-        visits: [
-          { reason: 'routine-checkup', outcome: 'stable' },
-          { reason: 'follow-up', outcome: 'improving' }
+        sections: [
+          {
+            name: 'visits',
+            fields: [
+              { reason: 'routine-checkup', outcome: 'stable' },
+              { reason: 'follow-up', outcome: 'improving' }
+            ]
+          }
         ]
       }
     });
 
     expect((capturedBody as Record<string, unknown>).customFields).toEqual({
-      visits: [
-        { reason: 'routine-checkup', outcome: 'stable' },
-        { reason: 'follow-up', outcome: 'improving' }
+      sections: [
+        {
+          name: 'visits',
+          fields: [
+            { reason: 'routine-checkup', outcome: 'stable' },
+            { reason: 'follow-up', outcome: 'improving' }
+          ]
+        }
       ]
     });
   });
@@ -279,16 +289,23 @@ describe('createPatient', () => {
       fullName: 'Jane Doe',
       age: 35,
       phoneNumber: '08012345678',
-      pharmacistName: 'Dr. Smith',
       customFields: {
-        labResults: [
-          { 'test-name': 'CBC', result: 'normal' },
-          { 'test-name': 'Lipid Panel', result: 'borderline' }
+        sections: [
+          {
+            name: 'labResults',
+            fields: [
+              { 'test-name': 'CBC', result: 'normal' },
+              { 'test-name': 'Lipid Panel', result: 'borderline' }
+            ]
+          }
         ]
       }
     });
 
-    const rows = ((capturedBody as Record<string, unknown>).customFields as Record<string, unknown>).labResults as Record<string, unknown>[];
+    const customFields = (capturedBody as Record<string, unknown>).customFields as {
+      sections: Array<{ name: string; fields: Array<Record<string, unknown>> }>;
+    };
+    const rows = customFields.sections.find((s) => s.name === 'labResults')?.fields ?? [];
     rows.forEach((row) => {
       expect(row).not.toHaveProperty('result-scan');
       expect(row).not.toHaveProperty('lab-report-file');
@@ -309,28 +326,32 @@ describe('createPatient', () => {
       fullName: 'Jane Doe',
       age: 35,
       phoneNumber: '08012345678',
-      pharmacistName: 'Dr. Smith',
-      address: '123 Main St',
-      notes: 'Patient prefers morning appointments',
       customFields: {
-        'blood-group': 'O+',
-        diagnosis: 'Hypertension',
-        prescriptions: [{ 'drug-name': 'Aspirin', dosage: 100, frequency: 'daily' }],
-        visits: [{ reason: 'routine-checkup', outcome: 'stable' }]
+        sections: [
+          { name: 'personal-info', fields: [{ 'core-address': '123 Main St', 'core-notes': 'Patient prefers morning appointments' }] },
+          { name: 'medical-info', fields: [{ 'blood-group': 'O+', diagnosis: 'Hypertension' }] },
+          { name: 'core-prescriptions', fields: [{ 'drug-name': 'Aspirin', dosage: 100, frequency: 'daily' }] },
+          { name: 'visits', fields: [{ reason: 'routine-checkup', outcome: 'stable' }] }
+        ]
       }
     });
 
     const body = capturedBody as Record<string, unknown>;
     expect(body).toMatchObject({
       fullName: 'Jane Doe',
-      address: '123 Main St',
-      notes: 'Patient prefers morning appointments'
+      age: 35,
+      phoneNumber: '08012345678'
     });
+    expect(body).not.toHaveProperty('address');
+    expect(body).not.toHaveProperty('notes');
+    expect(body).not.toHaveProperty('pharmacistName');
     expect(body.customFields).toMatchObject({
-      'blood-group': 'O+',
-      diagnosis: 'Hypertension',
-      prescriptions: [{ 'drug-name': 'Aspirin', dosage: 100, frequency: 'daily' }],
-      visits: [{ reason: 'routine-checkup', outcome: 'stable' }]
+      sections: [
+        { name: 'personal-info', fields: [{ 'core-address': '123 Main St', 'core-notes': 'Patient prefers morning appointments' }] },
+        { name: 'medical-info', fields: [{ 'blood-group': 'O+', diagnosis: 'Hypertension' }] },
+        { name: 'core-prescriptions', fields: [{ 'drug-name': 'Aspirin', dosage: 100, frequency: 'daily' }] },
+        { name: 'visits', fields: [{ reason: 'routine-checkup', outcome: 'stable' }] }
+      ]
     });
     expect(JSON.stringify(body.customFields)).not.toMatch(/file|scan|report/i);
   });
@@ -343,8 +364,7 @@ describe('createPatient', () => {
     const result = await createPatient({
       fullName: 'Jane Doe',
       age: 35,
-      phoneNumber: '08012345678',
-      pharmacistName: 'Dr. Smith'
+      phoneNumber: '08012345678'
     });
 
     expect(result).toEqual(patient);
@@ -353,7 +373,7 @@ describe('createPatient', () => {
   it('should reject with the axios error on a server error', async () => {
     server.use(http.post(`${BASE}/api/patients`, () => HttpResponse.json({ message: 'Validation failed' }, { status: 422 })));
 
-    await expect(createPatient({ fullName: 'Jane Doe', age: 35, phoneNumber: '08012345678', pharmacistName: 'Dr. Smith' })).rejects.toMatchObject({
+    await expect(createPatient({ fullName: 'Jane Doe', age: 35, phoneNumber: '08012345678' })).rejects.toMatchObject({
       response: { status: 422 }
     });
   });
