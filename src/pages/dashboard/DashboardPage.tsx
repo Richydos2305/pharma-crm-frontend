@@ -6,6 +6,7 @@ import { getMe } from '../../api/users';
 import { getSettings } from '../../api/settings';
 import { AppLayout } from '../../components/layout/AppLayout';
 import { OnboardingChecklist } from '../../components/OnboardingChecklist';
+import { getLastAppointmentDate } from '../../components/schemaFormUtils';
 import type { IPatient } from '../../types';
 
 function patientInitials(name: string): string {
@@ -136,47 +137,50 @@ export function DashboardPage() {
         </div>
       ) : (
         <div className="patient-cards-grid">
-          {recentPatients.map((p: IPatient, i) => (
-            <div className="patient-card" key={p.id}>
-              <div className="patient-card-top">
-                <div className="avatar" style={{ background: avatarColor(i) }}>
-                  {patientInitials(p.fullName)}
+          {recentPatients.map((p: IPatient, i) => {
+            const lastAppt = getLastAppointmentDate(p);
+            return (
+              <div className="patient-card" key={p.id}>
+                <div className="patient-card-top">
+                  <div className="avatar" style={{ background: avatarColor(i) }}>
+                    {patientInitials(p.fullName)}
+                  </div>
+                  <div>
+                    <div className="patient-name">{p.fullName}</div>
+                    <div className="patient-age">Age {p.age}</div>
+                  </div>
                 </div>
-                <div>
-                  <div className="patient-name">{p.fullName}</div>
-                  <div className="patient-age">Age {p.age}</div>
-                </div>
+                {lastAppt && (
+                  <div className="appt-row">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="3" y="4" width="18" height="18" rx="2" />
+                      <line x1="16" y1="2" x2="16" y2="6" />
+                      <line x1="8" y1="2" x2="8" y2="6" />
+                      <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                    Last appointment: {formatDate(lastAppt)}
+                  </div>
+                )}
+                {p.pharmacistName.length > 0 && (
+                  <div className="attended-row">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                      <circle cx="9" cy="7" r="4" />
+                      <polyline points="16 11 18 13 22 9" />
+                    </svg>
+                    Attended to by {p.pharmacistName[p.pharmacistName.length - 1]}
+                  </div>
+                )}
+                <button className="btn-outline" onClick={() => navigate(`/patients/${p.id}`)}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                  View Patient
+                </button>
               </div>
-              {p.appointmentDates?.length > 0 && (
-                <div className="appt-row">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="3" y="4" width="18" height="18" rx="2" />
-                    <line x1="16" y1="2" x2="16" y2="6" />
-                    <line x1="8" y1="2" x2="8" y2="6" />
-                    <line x1="3" y1="10" x2="21" y2="10" />
-                  </svg>
-                  Last appointment: {formatDate(p.appointmentDates[p.appointmentDates.length - 1])}
-                </div>
-              )}
-              {p.pharmacistName && (
-                <div className="attended-row">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                    <circle cx="9" cy="7" r="4" />
-                    <polyline points="16 11 18 13 22 9" />
-                  </svg>
-                  Attended to by {p.pharmacistName}
-                </div>
-              )}
-              <button className="btn-outline" onClick={() => navigate(`/patients/${p.id}`)}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                  <circle cx="12" cy="12" r="3" />
-                </svg>
-                View Patient
-              </button>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </AppLayout>

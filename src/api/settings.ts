@@ -19,8 +19,8 @@ export async function getSettings(): Promise<SettingsData | null> {
 }
 
 export async function publishFormSchema(schema: FormSchema, hasExisting: boolean): Promise<void> {
-  const schemaToSave: FormSchema = { ...schema, status: 'published' };
-  const payload = { formConfig: { schema: schemaToSave } };
+  const { id, name, sections } = schema;
+  const payload = { formConfig: { schema: { id, name, sections } } };
   if (!hasExisting) {
     // Backend createSettings ignores req.body — create bare doc first, then set schema
     await apiClient.post('/api/settings');
