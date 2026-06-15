@@ -102,28 +102,28 @@ describe('hydrateState', () => {
       expect((state['personal-info'] as Record<string, string>)['core-age']).toBe('');
     });
 
-    it('should map core-phone to patient.phoneNumber', () => {
+    it('should map core-phone-number to patient.phoneNumber', () => {
       const schema = createMockFormSchema([
         createStandardSection({
           id: 'personal-info',
-          fields: [createField({ id: 'core-phone', type: 'short_text' })]
+          fields: [createField({ id: 'core-phone-number', type: 'short_text' })]
         })
       ]);
       const patient = createMockPatient({ phoneNumber: '08012345678' });
 
       const state = hydrateState(schema, patient);
 
-      expect((state['personal-info'] as Record<string, string>)['core-phone']).toBe('08012345678');
+      expect((state['personal-info'] as Record<string, string>)['core-phone-number']).toBe('08012345678');
     });
 
-    it('should read core-address, core-notes and core-attended-by from customFields.sections via the generic path', () => {
+    it('should read core-address, core-notes and core-attended-to-by from customFields.sections via the generic path', () => {
       const schema = createMockFormSchema([
         createStandardSection({
           id: 'personal-info',
           fields: [
             createField({ id: 'core-address', type: 'short_text' }),
             createField({ id: 'core-notes', type: 'textarea' }),
-            createField({ id: 'core-attended-by', type: 'relation' })
+            createField({ id: 'core-attended-to-by', type: 'relation' })
           ]
         })
       ]);
@@ -132,7 +132,7 @@ describe('hydrateState', () => {
           sections: [
             {
               name: 'personal-info',
-              fields: [{ 'core-address': '123 Main St', 'core-notes': 'Some notes', 'core-attended-by': 'Dr. Adams' }]
+              fields: [{ 'core-address': '123 Main St', 'core-notes': 'Some notes', 'core-attended-to-by': 'Dr. Adams' }]
             }
           ]
         }
@@ -143,7 +143,7 @@ describe('hydrateState', () => {
 
       expect(values['core-address']).toBe('123 Main St');
       expect(values['core-notes']).toBe('Some notes');
-      expect(values['core-attended-by']).toBe('Dr. Adams');
+      expect(values['core-attended-to-by']).toBe('Dr. Adams');
     });
 
     it('should not include file-type fields in the returned state', () => {
@@ -418,7 +418,7 @@ describe('getLastAppointmentDate', () => {
 
   it('should return null when no section/row has a core-appointment-date value', () => {
     const patient = createMockPatient({
-      customFields: { sections: [{ name: 'medical', fields: [{ 'core-attended-by': 'Dr. Adams' }] }] }
+      customFields: { sections: [{ name: 'medical', fields: [{ 'core-attended-to-by': 'Dr. Adams' }] }] }
     });
 
     expect(getLastAppointmentDate(patient)).toBeNull();
@@ -441,7 +441,7 @@ describe('buildPayload', () => {
           id: 'personal-info',
           fields: [
             createField({ id: 'core-full-name', type: 'short_text' }),
-            createField({ id: 'core-phone', type: 'short_text' }),
+            createField({ id: 'core-phone-number', type: 'short_text' }),
             createField({ id: 'core-address', type: 'short_text' }),
             createField({ id: 'core-notes', type: 'textarea' })
           ]
@@ -450,7 +450,7 @@ describe('buildPayload', () => {
       const state = {
         'personal-info': {
           'core-full-name': 'Jane Doe',
-          'core-phone': '08012345678',
+          'core-phone-number': '08012345678',
           'core-address': '123 Main St',
           'core-notes': 'Healthy'
         }
@@ -492,23 +492,23 @@ describe('buildPayload', () => {
       expect(payload.age).toBe(0);
     });
 
-    it('should put core-attended-by into the section fields regardless of isUpdate, and never set pharmacistName', () => {
+    it('should put core-attended-to-by into the section fields regardless of isUpdate, and never set pharmacistName', () => {
       const schema = createMockFormSchema([
         createStandardSection({
           id: 'medical',
-          fields: [createField({ id: 'core-attended-by', type: 'relation' })]
+          fields: [createField({ id: 'core-attended-to-by', type: 'relation' })]
         })
       ]);
-      const state = { medical: { 'core-attended-by': 'Dr. Adams' } };
+      const state = { medical: { 'core-attended-to-by': 'Dr. Adams' } };
 
       const createPayload = buildPayload(schema, state, false);
       const updatePayload = buildPayload(schema, state, true);
 
       expect(createPayload.customFields?.sections.find((s) => s.name === 'medical')?.fields[0]).toMatchObject({
-        'core-attended-by': 'Dr. Adams'
+        'core-attended-to-by': 'Dr. Adams'
       });
       expect(updatePayload.customFields?.sections.find((s) => s.name === 'medical')?.fields[0]).toMatchObject({
-        'core-attended-by': 'Dr. Adams'
+        'core-attended-to-by': 'Dr. Adams'
       });
       expect(createPayload).not.toHaveProperty('pharmacistName');
       expect(updatePayload).not.toHaveProperty('pharmacistName');

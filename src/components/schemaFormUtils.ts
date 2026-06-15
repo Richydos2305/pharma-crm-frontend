@@ -22,7 +22,7 @@ function uid(): string {
 const CORE_TOP_LEVEL: Record<string, string> = {
   'core-full-name': 'fullName',
   'core-age': 'age',
-  'core-phone': 'phoneNumber'
+  'core-phone-number': 'phoneNumber'
 };
 
 // ─── Hydrate state from an existing patient (for UpdatePatientPage) ───────────

@@ -72,8 +72,8 @@ export const PERSONAL_INFO_SECTION: SectionSchema = {
   fields: [
     { id: 'core-full-name', label: 'Full Name', type: 'short_text', required: true, locked: true },
     { id: 'core-age', label: 'Age', type: 'number', required: true, locked: true },
-    { id: 'core-phone', label: 'Phone Number', type: 'short_text', required: true, locked: true },
-    { id: 'core-address', label: 'Home Address', type: 'short_text', required: false, locked: true }
+    { id: 'core-phone-number', label: 'Phone Number', type: 'short_text', required: true, locked: true },
+    { id: 'core-address', label: 'Home Address', type: 'short_text', required: false }
   ]
 };
 
@@ -92,7 +92,7 @@ export const MEDICAL_INFO_SECTION: SectionSchema = {
   type: 'standard',
   fields: [
     { id: 'core-appointment-date', label: 'Appointment Date', type: 'date', required: false },
-    { id: 'core-attended-by', label: 'Attended To By', type: 'relation', required: true, locked: true },
+    { id: 'core-attended-to-by', label: 'Attended To By', type: 'relation', required: true, locked: true },
     { id: 'core-notes', label: 'Notes', type: 'textarea', required: false }
   ]
 };
@@ -138,12 +138,7 @@ export function buildConsultationTemplate(): FormSchema {
         id: uid(),
         name: 'Medical Information',
         type: 'standard',
-        fields: [
-          { id: uid(), label: 'Appointment Date', type: 'date', required: false },
-          { id: uid(), label: 'Attended To By', type: 'relation', required: true, locked: true },
-          { id: uid(), label: 'Notes', type: 'textarea', required: false },
-          { id: uid(), label: 'Consultation Fee', type: 'number', required: false }
-        ]
+        fields: [...MEDICAL_INFO_SECTION.fields.map((f) => ({ ...f })), { id: uid(), label: 'Consultation Fee', type: 'number', required: false }]
       },
       { ...PRESCRIPTIONS_SECTION, fields: PRESCRIPTIONS_SECTION.fields.map((f) => ({ ...f })) }
     ]
@@ -163,12 +158,7 @@ export function buildFollowUpTemplate(): FormSchema {
         type: 'repeatable',
         rowLabel: 'Visit',
         addButtonLabel: 'Add another visit',
-        fields: [
-          { id: uid(), label: 'Appointment Date', type: 'date', required: false },
-          { id: uid(), label: 'Attended To By', type: 'relation', required: true, locked: true },
-          { id: uid(), label: 'Notes', type: 'textarea', required: false },
-          { id: uid(), label: 'Lab Results', type: 'file', required: false }
-        ]
+        fields: [...MEDICAL_INFO_SECTION.fields.map((f) => ({ ...f })), { id: uid(), label: 'Lab Results', type: 'file', required: false }]
       },
       { ...PRESCRIPTIONS_SECTION, fields: PRESCRIPTIONS_SECTION.fields.map((f) => ({ ...f })) }
     ]
