@@ -6,6 +6,7 @@ import { getPatient, updatePatient, deletePatient, uploadPatientFile } from '../
 import { listPharmacists } from '../../api/pharmacists';
 import { AppLayout } from '../../components/layout/AppLayout';
 import { SchemaForm } from '../../components/SchemaForm';
+import { SuccessCheck } from '../../components/SuccessCheck';
 import { hydrateState, hydrateFileState } from '../../components/schemaFormUtils';
 import { buildDefaultTemplate } from '../../types/formBuilder';
 import type { FormSchema } from '../../types/formBuilder';
@@ -17,6 +18,7 @@ export function UpdatePatientPage() {
   const queryClient = useQueryClient();
   const [error, setError] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const { data: patient, isLoading } = useQuery({
     queryKey: queryKeys.patients.detail(id!),
@@ -92,7 +94,8 @@ export function UpdatePatientPage() {
 
       queryClient.invalidateQueries({ queryKey: queryKeys.patients.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.patients.detail(id!) });
-      navigate('/patients');
+      setShowSuccess(true);
+      setTimeout(() => navigate('/patients'), 700);
     } catch (err) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
       setError(msg ?? 'Failed to update patient.');
@@ -153,49 +156,52 @@ export function UpdatePatientPage() {
   }
 
   return (
-    <AppLayout mobileTopBar={mobileTopBar}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
-        <h1 className="page-title" style={{ marginBottom: 0 }}>
-          {patient.fullName}
-        </h1>
-        {confirmDelete ? (
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <span style={{ fontSize: 13, color: 'var(--fg-muted)' }}>Are you sure?</span>
-            <button className="btn-ghost" onClick={() => setConfirmDelete(false)}>
-              Cancel
+    <>
+      <SuccessCheck visible={showSuccess} />
+      <AppLayout mobileTopBar={mobileTopBar}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
+          <h1 className="page-title" style={{ marginBottom: 0 }}>
+            {patient.fullName}
+          </h1>
+          {confirmDelete ? (
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <span style={{ fontSize: 13, color: 'var(--fg-muted)' }}>Are you sure?</span>
+              <button className="btn-ghost" onClick={() => setConfirmDelete(false)}>
+                Cancel
+              </button>
+              <button className="delete-btn" onClick={() => deleteMutation.mutate()} disabled={deleteMutation.isPending}>
+                {deleteMutation.isPending ? 'Deleting...' : 'Yes, Delete'}
+              </button>
+            </div>
+          ) : (
+            <button className="delete-btn" onClick={() => setConfirmDelete(true)}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                <path d="M10 11v6" />
+                <path d="M14 11v6" />
+                <path d="M9 6V4h6v2" />
+              </svg>
+              Delete Patient
             </button>
-            <button className="delete-btn" onClick={() => deleteMutation.mutate()} disabled={deleteMutation.isPending}>
-              {deleteMutation.isPending ? 'Deleting...' : 'Yes, Delete'}
-            </button>
-          </div>
-        ) : (
-          <button className="delete-btn" onClick={() => setConfirmDelete(true)}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polyline points="3 6 5 6 21 6" />
-              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-              <path d="M10 11v6" />
-              <path d="M14 11v6" />
-              <path d="M9 6V4h6v2" />
-            </svg>
-            Delete Patient
-          </button>
-        )}
-      </div>
+          )}
+        </div>
 
-      <SchemaForm
-        key={patient.id}
-        schema={schema}
-        initialState={initialState}
-        initialFileState={initialFileState}
-        pharmacists={pharmacists}
-        isUpdate={true}
-        onSubmit={handleSubmit}
-        onExistingFileDeleted={handleExistingFileDeleted}
-        onCancel={() => navigate('/patients')}
-        submitLabel="Update Patient"
-        loading={saving}
-        error={error}
-      />
-    </AppLayout>
+        <SchemaForm
+          key={patient.id}
+          schema={schema}
+          initialState={initialState}
+          initialFileState={initialFileState}
+          pharmacists={pharmacists}
+          isUpdate={true}
+          onSubmit={handleSubmit}
+          onExistingFileDeleted={handleExistingFileDeleted}
+          onCancel={() => navigate('/patients')}
+          submitLabel="Update Patient"
+          loading={saving}
+          error={error}
+        />
+      </AppLayout>
+    </>
   );
 }

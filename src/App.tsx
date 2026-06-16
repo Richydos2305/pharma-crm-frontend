@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './context/AuthProvider';
@@ -23,78 +23,78 @@ const queryClient = new QueryClient({
   }
 });
 
+const router = createBrowserRouter([
+  { path: '/login', element: <LoginPage /> },
+  { path: '/register', element: <RegisterPage /> },
+  { path: '/check-email', element: <CheckEmailPage /> },
+  { path: '/verify-email', element: <VerifyEmailPage /> },
+  { path: '/forgot-password', element: <ForgotPasswordPage /> },
+  { path: '/reset-password', element: <ResetPasswordPage /> },
+  {
+    path: '/dashboard',
+    element: (
+      <ProtectedRoute>
+        <DashboardPage />
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: '/patients',
+    element: (
+      <ProtectedRoute>
+        <PatientsPage />
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: '/patients/new',
+    element: (
+      <ProtectedRoute>
+        <CreatePatientPage />
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: '/patients/form-builder',
+    element: (
+      <ProtectedRoute>
+        <FormBuilderPage />
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: '/patients/:id',
+    element: (
+      <ProtectedRoute>
+        <UpdatePatientPage />
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: '/pharmacists',
+    element: (
+      <ProtectedRoute>
+        <PharmacistsPage />
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: '/profile',
+    element: (
+      <ProtectedRoute>
+        <ProfilePage />
+      </ProtectedRoute>
+    )
+  },
+  { path: '*', element: <Navigate to="/dashboard" replace /> }
+]);
+
 export default function App() {
   return (
     <>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <BrowserRouter>
-            <Routes>
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-              <Route path="/check-email" element={<CheckEmailPage />} />
-              <Route path="/verify-email" element={<VerifyEmailPage />} />
-              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-              <Route path="/reset-password" element={<ResetPasswordPage />} />
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <DashboardPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/patients"
-                element={
-                  <ProtectedRoute>
-                    <PatientsPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/patients/new"
-                element={
-                  <ProtectedRoute>
-                    <CreatePatientPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/patients/form-builder"
-                element={
-                  <ProtectedRoute>
-                    <FormBuilderPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/patients/:id"
-                element={
-                  <ProtectedRoute>
-                    <UpdatePatientPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/pharmacists"
-                element={
-                  <ProtectedRoute>
-                    <PharmacistsPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/profile"
-                element={
-                  <ProtectedRoute>
-                    <ProfilePage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="*" element={<Navigate to="/dashboard" replace />} />
-            </Routes>
-          </BrowserRouter>
+          <RouterProvider router={router} />
         </AuthProvider>
       </QueryClientProvider>
       <Analytics />

@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { FieldSchema, FieldType } from '../../types/formBuilder';
+import { ScrollFadeContainer } from '../ScrollFadeContainer';
 
 interface AddCustomFieldSheetProps {
+  open: boolean;
   onAdd: (field: Omit<FieldSchema, 'id'>) => void;
   onClose: () => void;
 }
@@ -75,11 +77,21 @@ const FIELD_TYPES: { type: FieldType; label: string; icon: React.ReactNode }[] =
   }
 ];
 
-export function AddCustomFieldSheet({ onAdd, onClose }: AddCustomFieldSheetProps) {
+export function AddCustomFieldSheet({ open, onAdd, onClose }: AddCustomFieldSheetProps) {
   const [label, setLabel] = useState('');
   const [type, setType] = useState<FieldType>('short_text');
   const [required, setRequired] = useState(false);
   const [labelError, setLabelError] = useState('');
+
+  useEffect(() => {
+    if (open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setLabel('');
+      setType('short_text');
+      setRequired(false);
+      setLabelError('');
+    }
+  }, [open]);
 
   function handleAdd() {
     const trimmed = label.trim();
@@ -92,7 +104,7 @@ export function AddCustomFieldSheet({ onAdd, onClose }: AddCustomFieldSheetProps
   }
 
   return (
-    <div className="fb-sheet-overlay" onClick={onClose} role="dialog" aria-modal aria-label="Add custom field">
+    <div className={`fb-sheet-overlay${open ? ' open' : ''}`} onClick={onClose} role="dialog" aria-modal aria-label="Add custom field">
       <div className="fb-sheet" onClick={(e) => e.stopPropagation()}>
         <div className="fb-sheet__header">
           <div>
@@ -107,7 +119,7 @@ export function AddCustomFieldSheet({ onAdd, onClose }: AddCustomFieldSheetProps
           </button>
         </div>
 
-        <div className="fb-sheet__body">
+        <ScrollFadeContainer className="fb-sheet__body">
           {/* Field label */}
           <div className="form-group" style={{ marginBottom: 20 }}>
             <label className="form-label" htmlFor="fb-field-label">
@@ -157,7 +169,7 @@ export function AddCustomFieldSheet({ onAdd, onClose }: AddCustomFieldSheetProps
               <span className="fb-toggle__thumb" />
             </button>
           </div>
-        </div>
+        </ScrollFadeContainer>
 
         <div className="fb-sheet__footer">
           <button type="button" className="btn-ghost" onClick={onClose}>

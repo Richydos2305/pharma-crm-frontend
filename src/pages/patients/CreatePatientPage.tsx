@@ -8,6 +8,7 @@ import { listPharmacists } from '../../api/pharmacists';
 import { getMe } from '../../api/users';
 import { AppLayout } from '../../components/layout/AppLayout';
 import { SchemaForm } from '../../components/SchemaForm';
+import { SuccessCheck } from '../../components/SuccessCheck';
 import { buildDefaultTemplate } from '../../types/formBuilder';
 import type { FormSchema } from '../../types/formBuilder';
 import type { FileState, RepeatableFileState } from '../../components/schemaFormUtils';
@@ -17,6 +18,7 @@ export function CreatePatientPage() {
   const queryClient = useQueryClient();
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const { data: user } = useQuery({ queryKey: queryKeys.me, queryFn: getMe, staleTime: Infinity, gcTime: Infinity });
 
@@ -92,7 +94,8 @@ export function CreatePatientPage() {
 
       queryClient.invalidateQueries({ queryKey: queryKeys.patients.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.settings });
-      navigate('/patients');
+      setShowSuccess(true);
+      setTimeout(() => navigate('/patients'), 700);
     } catch (err) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
       setError(msg ?? 'Failed to create patient.');
@@ -137,17 +140,20 @@ export function CreatePatientPage() {
   }
 
   return (
-    <AppLayout mobileTopBar={mobileTopBar}>
-      <h1 className="page-title">New Patient</h1>
-      <SchemaForm
-        schema={schema}
-        pharmacists={pharmacists}
-        onSubmit={handleSubmit}
-        onCancel={() => navigate('/patients')}
-        submitLabel="Save Patient"
-        loading={saving}
-        error={error}
-      />
-    </AppLayout>
+    <>
+      <SuccessCheck visible={showSuccess} />
+      <AppLayout mobileTopBar={mobileTopBar}>
+        <h1 className="page-title">New Patient</h1>
+        <SchemaForm
+          schema={schema}
+          pharmacists={pharmacists}
+          onSubmit={handleSubmit}
+          onCancel={() => navigate('/patients')}
+          submitLabel="Save Patient"
+          loading={saving}
+          error={error}
+        />
+      </AppLayout>
+    </>
   );
 }
