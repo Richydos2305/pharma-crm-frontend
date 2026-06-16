@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { login, resendVerification } from '../../api/auth';
 import { useAuth } from '../../context/useAuthHook';
@@ -18,6 +18,11 @@ export function LoginPage() {
   const [isUnverified, setIsUnverified] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const [resendSent, setResendSent] = useState(false);
+  const [isShaking, setIsShaking] = useState(false);
+
+  useEffect(() => {
+    if (error) setIsShaking(true);
+  }, [error]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -152,7 +157,12 @@ export function LoginPage() {
                   </button>
                 </div>
               </div>
-              <button className="btn-primary" type="submit" disabled={loading}>
+              <button
+                className={`btn-primary${isShaking ? ' shake' : ''}`}
+                type="submit"
+                disabled={loading}
+                onAnimationEnd={() => setIsShaking(false)}
+              >
                 {loading ? 'Signing in...' : 'Sign In'}
               </button>
             </form>

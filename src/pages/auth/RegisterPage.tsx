@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { register } from '../../api/auth';
 
@@ -13,6 +13,11 @@ export function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [isShaking, setIsShaking] = useState(false);
+
+  useEffect(() => {
+    if (error) setIsShaking(true);
+  }, [error]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -156,7 +161,12 @@ export function RegisterPage() {
                   </button>
                 </div>
               </div>
-              <button className="btn-primary" type="submit" disabled={loading}>
+              <button
+                className={`btn-primary${isShaking ? ' shake' : ''}`}
+                type="submit"
+                disabled={loading}
+                onAnimationEnd={() => setIsShaking(false)}
+              >
                 {loading ? 'Creating account...' : 'Create Account'}
               </button>
             </form>

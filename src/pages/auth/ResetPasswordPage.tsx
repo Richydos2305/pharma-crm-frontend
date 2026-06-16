@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { resetPassword } from '../../api/auth';
 
@@ -13,6 +13,11 @@ export function ResetPasswordPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isShaking, setIsShaking] = useState(false);
+
+  useEffect(() => {
+    if (error) setIsShaking(true);
+  }, [error]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -164,7 +169,12 @@ export function ResetPasswordPage() {
                   </button>
                 </div>
               </div>
-              <button className="btn-primary" type="submit" disabled={loading}>
+              <button
+                className={`btn-primary${isShaking ? ' shake' : ''}`}
+                type="submit"
+                disabled={loading}
+                onAnimationEnd={() => setIsShaking(false)}
+              >
                 {loading ? 'Resetting...' : 'Reset Password'}
               </button>
             </form>

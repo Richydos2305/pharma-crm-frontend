@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { SectionSchema, SectionType } from '../../types/formBuilder';
 import { ScrollFadeContainer } from '../ScrollFadeContainer';
 import { PRESET_ALLERGIES_SECTION } from '../../types/formBuilder';
 
 interface AddSectionSheetProps {
+  open: boolean;
   onAdd: (section: Omit<SectionSchema, 'id'>) => void;
   onClose: () => void;
 }
@@ -45,12 +46,22 @@ const PRESETS = [
   }
 ];
 
-export function AddSectionSheet({ onAdd, onClose }: AddSectionSheetProps) {
+export function AddSectionSheet({ open, onAdd, onClose }: AddSectionSheetProps) {
   const [step, setStep] = useState<Step>('choose-type');
   const [sectionType, setSectionType] = useState<SectionType>('standard');
   const [name, setName] = useState('');
   const [rowLabel, setRowLabel] = useState('');
   const [nameError, setNameError] = useState('');
+
+  useEffect(() => {
+    if (open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setStep('choose-type');
+      setName('');
+      setRowLabel('');
+      setNameError('');
+    }
+  }, [open]);
 
   function handleTypeSelect(type: SectionType) {
     setSectionType(type);
@@ -84,7 +95,7 @@ export function AddSectionSheet({ onAdd, onClose }: AddSectionSheetProps) {
   }
 
   return (
-    <div className="fb-sheet-overlay" onClick={onClose} role="dialog" aria-modal aria-label="Add section">
+    <div className={`fb-sheet-overlay${open ? ' open' : ''}`} onClick={onClose} role="dialog" aria-modal aria-label="Add section">
       <div className="fb-sheet" onClick={(e) => e.stopPropagation()}>
         <div className="fb-sheet__header">
           <div>

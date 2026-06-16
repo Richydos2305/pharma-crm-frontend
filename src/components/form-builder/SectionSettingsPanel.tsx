@@ -179,14 +179,14 @@ export function SectionSettingsPanel({ section, onUpdate, onDeleteField, onAddFi
         </div>
       </div>
 
-      {showAddField && (
-        <AddCustomFieldSheet
-          onAdd={(field) => {
-            onAddField(field);
-          }}
-          onClose={() => setShowAddField(false)}
-        />
-      )}
+      <AddCustomFieldSheet
+        open={showAddField}
+        onAdd={(field) => {
+          onAddField(field);
+          setShowAddField(false);
+        }}
+        onClose={() => setShowAddField(false)}
+      />
     </>
   );
 }
