@@ -100,60 +100,62 @@ export function OnboardingChecklist({ steps }: Props) {
         </div>
       </div>
 
-      <ol id="onboarding-steps-list" className={`onboarding-steps${expanded ? ' onboarding-steps--open' : ''}`}>
-        {doneSteps.map((step) => (
-          <li key={step.key} className="onboarding-step onboarding-step--done">
-            <span className="onboarding-step-icon" aria-hidden="true">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10" />
-                <path d="m9 12 2 2 4-4" />
-              </svg>
-            </span>
-            <div className="onboarding-step-body">
-              <span className="onboarding-step-label">{step.label}</span>
-            </div>
-          </li>
-        ))}
+      <div className={`onboarding-steps-grid${expanded ? ' onboarding-steps-grid--open' : ''}`}>
+        <ol id="onboarding-steps-list" className="onboarding-steps">
+          {doneSteps.map((step) => (
+            <li key={step.key} className="onboarding-step onboarding-step--done">
+              <span className="onboarding-step-icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="m9 12 2 2 4-4" />
+                </svg>
+              </span>
+              <div className="onboarding-step-body">
+                <span className="onboarding-step-label">{step.label}</span>
+              </div>
+            </li>
+          ))}
 
-        {doneSteps.length > 0 && pendingSteps.length > 0 && <li className="onboarding-step-divider" role="separator" aria-hidden="true" />}
+          {doneSteps.length > 0 && pendingSteps.length > 0 && <li className="onboarding-step-divider" role="separator" aria-hidden="true" />}
 
-        {pendingSteps.map((step) => (
-          <li
-            key={step.key}
-            className={`onboarding-step${step.route ? ' onboarding-step--navigable' : ''}`}
-            onClick={step.route ? () => navigate(step.route!) : undefined}
-            role={step.route ? 'button' : undefined}
-            tabIndex={step.route ? 0 : undefined}
-            onKeyDown={step.route ? (e) => e.key === 'Enter' && navigate(step.route!) : undefined}
-          >
-            <span className="onboarding-step-icon" aria-hidden="true">
-              <span className="onboarding-step-circle" />
-            </span>
-            <div className="onboarding-step-body">
-              <span className="onboarding-step-label">{step.label}</span>
-              <span className="onboarding-step-desc">{step.description}</span>
-            </div>
-            {step.route && (
-              <>
-                <button
-                  className="onboarding-step-cta"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(step.route!);
-                  }}
-                >
-                  {step.ctaLabel}
-                </button>
-                <span className="onboarding-step-arrow" aria-hidden="true">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="9 18 15 12 9 6" />
-                  </svg>
-                </span>
-              </>
-            )}
-          </li>
-        ))}
-      </ol>
+          {pendingSteps.map((step) => (
+            <li
+              key={step.key}
+              className={`onboarding-step${step.route ? ' onboarding-step--navigable' : ''}`}
+              onClick={step.route ? () => navigate(step.route!) : undefined}
+              role={step.route ? 'button' : undefined}
+              tabIndex={step.route ? 0 : undefined}
+              onKeyDown={step.route ? (e) => e.key === 'Enter' && navigate(step.route!) : undefined}
+            >
+              <span className="onboarding-step-icon" aria-hidden="true">
+                <span className="onboarding-step-circle" />
+              </span>
+              <div className="onboarding-step-body">
+                <span className="onboarding-step-label">{step.label}</span>
+                <span className="onboarding-step-desc">{step.description}</span>
+              </div>
+              {step.route && (
+                <>
+                  <button
+                    className="onboarding-step-cta"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(step.route!);
+                    }}
+                  >
+                    {step.ctaLabel}
+                  </button>
+                  <span className="onboarding-step-arrow" aria-hidden="true">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                  </span>
+                </>
+              )}
+            </li>
+          ))}
+        </ol>
+      </div>
     </div>
   );
 }

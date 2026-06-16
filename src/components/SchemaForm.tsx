@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { FormSchema, FieldSchema, SectionSchema } from '../types/formBuilder';
 import type { IPharmacist, CreatePatientPayload, FileMetadata } from '../types';
 import { deletePatientFile } from '../api/patients';
@@ -471,6 +471,14 @@ export function SchemaForm({
   }));
 
   const [fileState, setFileState] = useState<FileState>(() => initFileState(schema, initialFileState));
+  const [isShaking, setIsShaking] = useState(false);
+
+  useEffect(() => {
+    if (error) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setIsShaking(true);
+    }
+  }, [error]);
 
   const [repFileState, setRepFileState] = useState<RepeatableFileState>(() =>
     initRepeatableFileState(schema, { ...initState(schema), ...initialState })
@@ -640,7 +648,7 @@ export function SchemaForm({
         <button type="button" className="btn-ghost" onClick={onCancel}>
           Cancel
         </button>
-        <button type="submit" className="btn-save" disabled={loading}>
+        <button type="submit" className={`btn-save${isShaking ? ' shake' : ''}`} disabled={loading} onAnimationEnd={() => setIsShaking(false)}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <polyline points="20 6 9 17 4 12" />
           </svg>
@@ -652,7 +660,7 @@ export function SchemaForm({
         <button type="button" className="btn-ghost" onClick={onCancel}>
           Cancel
         </button>
-        <button type="submit" className="btn-save" disabled={loading}>
+        <button type="submit" className={`btn-save${isShaking ? ' shake' : ''}`} disabled={loading} onAnimationEnd={() => setIsShaking(false)}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <polyline points="20 6 9 17 4 12" />
           </svg>

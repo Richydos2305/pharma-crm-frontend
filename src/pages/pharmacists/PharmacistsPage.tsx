@@ -124,6 +124,7 @@ export function PharmacistsPage() {
   const [addOpen, setAddOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<IPharmacist | null>(null);
   const [modalError, setModalError] = useState('');
+  const [exitingId, setExitingId] = useState<string | null>(null);
 
   const { data: user } = useQuery({ queryKey: queryKeys.me, queryFn: getMe, staleTime: Infinity, gcTime: Infinity });
 
@@ -238,7 +239,7 @@ export function PharmacistsPage() {
       ) : (
         <div className="pharmacist-cards-grid">
           {pharmacists.map((ph, i) => (
-            <div className="pharmacist-card" key={ph.id}>
+            <div className={`pharmacist-card${exitingId === ph.id ? ' exiting' : ''}`} key={ph.id}>
               <div className="pharmacist-card-top">
                 <div className="avatar" style={{ background: avatarColor(i) }}>
                   {pharmacistInitials(ph.name)}
@@ -273,7 +274,17 @@ export function PharmacistsPage() {
                     </svg>
                     Edit
                   </button>
-                  <button className="btn-delete-pharm" onClick={() => deleteMutation.mutate(ph.id)} disabled={deleteMutation.isPending}>
+                  <button
+                    className="btn-delete-pharm"
+                    onClick={() => {
+                      setExitingId(ph.id);
+                      setTimeout(() => {
+                        deleteMutation.mutate(ph.id);
+                        setExitingId(null);
+                      }, 200);
+                    }}
+                    disabled={deleteMutation.isPending || exitingId === ph.id}
+                  >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2">
                       <polyline points="3 6 5 6 21 6" />
                       <path d="M19 6l-1 14H6L5 6" />
