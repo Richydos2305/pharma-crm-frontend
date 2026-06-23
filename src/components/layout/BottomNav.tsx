@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 
 const NAV_ORDER = ['/dashboard', '/patients/new', '/patients/form-builder', '/patients', '/pharmacists', '/profile'];
@@ -16,8 +17,31 @@ function navClick(currentPath: string, toPath: string) {
 
 export function BottomNav() {
   const location = useLocation();
+  const navRef = useRef<HTMLElement>(null);
+  const [pill, setPill] = useState({ left: 0, width: 0, visible: false });
+
+  function measurePill() {
+    if (!navRef.current) return;
+    const active = navRef.current.querySelector('.bottom-nav-item.active') as HTMLElement | null;
+    if (!active) return;
+    setPill({ left: active.offsetLeft, width: active.offsetWidth, visible: true });
+  }
+
+  useLayoutEffect(() => {
+    measurePill();
+  }, [location.pathname]);
+
+  // Re-measure when the nav goes from hidden (display:none, desktop) to visible (mobile)
+  useLayoutEffect(() => {
+    if (!navRef.current) return;
+    const observer = new ResizeObserver(() => measurePill());
+    observer.observe(navRef.current);
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <nav className="bottom-nav">
+    <nav className="bottom-nav" ref={navRef}>
+      <div className="bottom-nav-pill" style={{ left: pill.left, width: pill.width, opacity: pill.visible ? 1 : 0 }} />
       <NavLink
         to="/dashboard"
         viewTransition
@@ -34,6 +58,7 @@ export function BottomNav() {
       </NavLink>
       <NavLink
         to="/patients"
+        end
         viewTransition
         onClick={navClick(location.pathname, '/patients')}
         className={({ isActive }) => `bottom-nav-item${isActive ? ' active' : ''}`}

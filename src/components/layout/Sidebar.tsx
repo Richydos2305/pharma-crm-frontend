@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { logout } from '../../api/auth';
+import { useToast } from '../../context/ToastContext';
 
 // Ordered by visual position — used to pick forward vs backward slide direction
 const NAV_ORDER = ['/dashboard', '/patients/new', '/patients/form-builder', '/patients', '/pharmacists', '/profile'];
@@ -27,6 +28,21 @@ export function Sidebar({ companyName, companyInitials, companyLogo }: SidebarPr
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { showToast } = useToast();
+
+  const navRef = useRef<HTMLDivElement>(null);
+  const [pill, setPill] = useState({ top: 0, height: 0, visible: false });
+
+  function measurePill() {
+    if (!navRef.current) return;
+    const active = navRef.current.querySelector('.nav-item.active') as HTMLElement | null;
+    if (!active) return;
+    setPill({ top: active.offsetTop, height: active.offsetHeight, visible: true });
+  }
+
+  useLayoutEffect(() => {
+    measurePill();
+  }, [location.pathname]);
 
   function toggleSidebar() {
     setCollapsed((c) => !c);
@@ -42,6 +58,7 @@ export function Sidebar({ companyName, companyInitials, companyLogo }: SidebarPr
     }
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
+    showToast('Signed out successfully', 'success');
     navigate('/login');
   }
 
@@ -71,7 +88,9 @@ export function Sidebar({ companyName, companyInitials, companyLogo }: SidebarPr
         </button>
       </div>
 
-      <div className="sidebar-nav">
+      <div className="sidebar-nav" ref={navRef}>
+        <div className="sidebar-pill" style={{ top: pill.top, height: pill.height, opacity: pill.visible ? 1 : 0 }} />
+
         <NavLink
           to="/dashboard"
           viewTransition
@@ -91,6 +110,7 @@ export function Sidebar({ companyName, companyInitials, companyLogo }: SidebarPr
 
         <NavLink
           to="/patients"
+          end
           viewTransition
           onClick={navClick(location.pathname, '/patients')}
           className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}

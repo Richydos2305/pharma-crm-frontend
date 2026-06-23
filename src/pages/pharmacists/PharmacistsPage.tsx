@@ -4,6 +4,7 @@ import { queryKeys } from '../../api/queryKeys';
 import { listPharmacists, createPharmacist, updatePharmacist, deletePharmacist } from '../../api/pharmacists';
 import { listPatients } from '../../api/patients';
 import { getMe } from '../../api/users';
+import { getApiErrorMessage } from '../../utils/errors';
 import { AppLayout } from '../../components/layout/AppLayout';
 import type { IPharmacist, IPatient } from '../../types';
 
@@ -148,8 +149,7 @@ export function PharmacistsPage() {
       setModalError('');
     },
     onError: (err: unknown) => {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      setModalError(msg ?? 'Failed to create pharmacist.');
+      setModalError(getApiErrorMessage(err));
     }
   });
 
@@ -161,8 +161,7 @@ export function PharmacistsPage() {
       setModalError('');
     },
     onError: (err: unknown) => {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      setModalError(msg ?? 'Failed to update pharmacist.');
+      setModalError(getApiErrorMessage(err));
     }
   });
 
@@ -312,23 +311,20 @@ export function PharmacistsPage() {
         onSave={handleAdd}
       />
 
-      {editTarget && (
-        <PharmacistModal
-          key={editTarget.id}
-          open={true}
-          title="Edit Pharmacist"
-          subtitle="Update pharmacist details"
-          initialName={editTarget.name}
-          initialPhone={editTarget.phoneNumber ?? ''}
-          loading={updateMutation.isPending}
-          error={modalError}
-          onClose={() => {
-            setEditTarget(null);
-            setModalError('');
-          }}
-          onSave={handleEdit}
-        />
-      )}
+      <PharmacistModal
+        open={editTarget !== null}
+        title="Edit Pharmacist"
+        subtitle="Update pharmacist details"
+        initialName={editTarget?.name ?? ''}
+        initialPhone={editTarget?.phoneNumber ?? ''}
+        loading={updateMutation.isPending}
+        error={modalError}
+        onClose={() => {
+          setEditTarget(null);
+          setModalError('');
+        }}
+        onSave={handleEdit}
+      />
     </AppLayout>
   );
 }

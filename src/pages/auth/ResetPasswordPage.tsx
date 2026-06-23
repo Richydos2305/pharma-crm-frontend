@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { resetPassword } from '../../api/auth';
+import { getApiErrorMessage } from '../../utils/errors';
 
 export function ResetPasswordPage() {
   const navigate = useNavigate();
@@ -49,8 +50,7 @@ export function ResetPasswordPage() {
       await resetPassword({ token, newPassword });
       navigate('/login', { state: { message: 'Password reset successfully. You can now sign in.' } });
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      setError(msg ?? 'Failed to reset password. Your link may have expired.');
+      setError(getApiErrorMessage(err));
     } finally {
       setLoading(false);
     }

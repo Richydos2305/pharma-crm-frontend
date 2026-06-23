@@ -5,6 +5,8 @@ import { deletePatientFile } from '../api/patients';
 import { buildPayload } from './schemaFormUtils';
 import type { FileFieldState, FileState, RepeatableFileState, RepeatableRow, FormState } from './schemaFormUtils';
 
+const MAX_FILE_BYTES = 10 * 1024 * 1024;
+
 // ─── Private type aliases ─────────────────────────────────────────────────────
 
 type FieldValues = Record<string, string>;
@@ -193,6 +195,7 @@ interface FileFieldInputProps {
 
 function FileFieldInput({ field, fileFieldState, onAddFiles, onRemovePending, onDeleteExisting }: FileFieldInputProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [sizeError, setSizeError] = useState('');
 
   async function handleDelete(publicId: string) {
     setDeletingId(publicId);
@@ -266,12 +269,41 @@ function FileFieldInput({ field, fileFieldState, onAddFiles, onRemovePending, on
             multiple
             style={{ display: 'none' }}
             onChange={(e) => {
-              const files = Array.from(e.target.files ?? []);
+              setSizeError('');
+              let files = Array.from(e.target.files ?? []);
+              const oversized = files.filter((f) => f.size > MAX_FILE_BYTES);
+              if (oversized.length > 0) {
+                setSizeError(oversized.map((f) => `"${f.name}" (${(f.size / 1048576).toFixed(1)} MB)`).join(', ') + ' — files must be under 10 MB.');
+                files = files.filter((f) => f.size <= MAX_FILE_BYTES);
+              }
               if (files.length > 0) onAddFiles(files);
               e.target.value = '';
             }}
           />
         </label>
+        {sizeError && (
+          <p className="error-banner" style={{ marginTop: 6, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+            <span>{sizeError}</span>
+            <button
+              type="button"
+              onClick={() => setSizeError('')}
+              aria-label="Dismiss"
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: 'inherit',
+                padding: 0,
+                lineHeight: 1,
+                fontSize: 16,
+                opacity: 0.7,
+                flexShrink: 0
+              }}
+            >
+              ×
+            </button>
+          </p>
+        )}
       </div>
     </div>
   );
