@@ -6,6 +6,7 @@ import { createPatient, updatePatient, uploadPatientFile } from '../../api/patie
 import { getSettings } from '../../api/settings';
 import { listPharmacists } from '../../api/pharmacists';
 import { getMe } from '../../api/users';
+import { getApiErrorMessage } from '../../utils/errors';
 import { AppLayout } from '../../components/layout/AppLayout';
 import { SchemaForm } from '../../components/SchemaForm';
 import { SuccessCheck } from '../../components/SuccessCheck';
@@ -97,8 +98,7 @@ export function CreatePatientPage() {
       setShowSuccess(true);
       setTimeout(() => navigate('/patients'), 700);
     } catch (err) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      setError(msg ?? 'Failed to create patient.');
+      setError(getApiErrorMessage(err));
     } finally {
       setSaving(false);
     }
