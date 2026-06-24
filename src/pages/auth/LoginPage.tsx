@@ -21,6 +21,11 @@ export function LoginPage() {
   const [isShaking, setIsShaking] = useState(false);
 
   useEffect(() => {
+    document.body.classList.add('auth-route');
+    return () => document.body.classList.remove('auth-route');
+  }, []);
+
+  useEffect(() => {
     if (error) setIsShaking(true);
   }, [error]);
 
@@ -42,8 +47,7 @@ export function LoginPage() {
         setError('Your email address has not been verified yet.');
       } else {
         setIsUnverified(false);
-        const msg = apiErr?.response?.data?.message;
-        setError(msg ?? 'Invalid email or password.');
+        setError(apiErr?.response?.data?.message ?? 'Invalid email or password.');
       }
     } finally {
       setLoading(false);

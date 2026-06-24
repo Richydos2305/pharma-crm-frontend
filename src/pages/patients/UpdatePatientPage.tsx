@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../../api/queryKeys';
 import { getPatient, updatePatient, deletePatient, uploadPatientFile } from '../../api/patients';
 import { listPharmacists } from '../../api/pharmacists';
+import { getApiErrorMessage } from '../../utils/errors';
 import { AppLayout } from '../../components/layout/AppLayout';
 import { SchemaForm } from '../../components/SchemaForm';
 import { SuccessCheck } from '../../components/SuccessCheck';
@@ -97,8 +98,7 @@ export function UpdatePatientPage() {
       setShowSuccess(true);
       setTimeout(() => navigate('/patients'), 700);
     } catch (err) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      setError(msg ?? 'Failed to update patient.');
+      setError(getApiErrorMessage(err));
     } finally {
       setSaving(false);
     }

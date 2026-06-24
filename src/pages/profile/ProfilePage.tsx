@@ -4,8 +4,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../../api/queryKeys';
 import { getMe, updateMe, uploadLogo } from '../../api/users';
 import { logout } from '../../api/auth';
+import { getApiErrorMessage } from '../../utils/errors';
 import { AppLayout } from '../../components/layout/AppLayout';
 import { SuccessCheck } from '../../components/SuccessCheck';
+import { useToast } from '../../context/ToastContext';
 
 function initials(name: string): string {
   return name
@@ -19,6 +21,7 @@ function initials(name: string): string {
 export function ProfilePage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const { data: user, isLoading } = useQuery({ queryKey: queryKeys.me, queryFn: getMe, staleTime: Infinity, gcTime: Infinity });
 
   const [editing, setEditing] = useState(false);
@@ -63,8 +66,7 @@ export function ProfilePage() {
       }, 700);
     },
     onError: (err: unknown) => {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      setError(msg ?? 'Failed to save changes.');
+      setError(getApiErrorMessage(err));
     }
   });
 
@@ -116,6 +118,7 @@ export function ProfilePage() {
     }
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
+    showToast('Signed out successfully', 'success');
     navigate('/login');
   }
 

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { verifyEmail } from '../../api/auth';
+import { getApiErrorMessage } from '../../utils/errors';
 
 type Status = 'loading' | 'success' | 'error';
 
@@ -20,8 +21,7 @@ export function VerifyEmailPage() {
     verifyEmail({ token })
       .then(() => setStatus('success'))
       .catch((err: unknown) => {
-        const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-        setErrorMsg(msg ?? 'This link is invalid or has expired.');
+        setErrorMsg(getApiErrorMessage(err));
         setStatus('error');
       });
   }, [token]);

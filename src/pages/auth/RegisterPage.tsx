@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { register } from '../../api/auth';
+import { getApiErrorMessage } from '../../utils/errors';
 
 export function RegisterPage() {
   const navigate = useNavigate();
@@ -47,8 +48,7 @@ export function RegisterPage() {
       await register({ fullName, email, password });
       navigate('/check-email', { state: { email } });
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      setError(msg ?? 'Registration failed. Please try again.');
+      setError(getApiErrorMessage(err));
     } finally {
       setLoading(false);
     }
