@@ -28,51 +28,75 @@ function avatarColor(index: number): string {
   return AVATAR_COLORS[index % AVATAR_COLORS.length];
 }
 
-type SortKey = 'recent' | 'oldest' | 'name-asc' | 'name-desc' | 'age-asc' | 'age-desc';
-type AgeFilter = 'all' | 'under30' | '30-50' | '50-70' | 'over70';
-type LastApptFilter = 'any' | 'last7' | 'last30' | 'last3months';
+type SortKey = 'recent' | 'oldest' | 'updated' | 'name-asc' | 'name-desc' | 'age-asc' | 'age-desc';
+type AgeFilter = 'all' | 'under30' | '30-50' | '51-70' | 'over71';
+type LastApptFilter = 'any' | 'last7' | 'last14' | 'last30' | 'last3months' | 'custom';
+type DateRegFilter = 'any' | 'last7' | 'last14' | 'last30' | 'last3months' | 'custom';
 
 const SORT_LABELS: Record<SortKey, string> = {
-  recent: 'Most Recent',
-  oldest: 'Oldest First',
+  recent: 'Newest first',
+  oldest: 'Oldest first',
+  updated: 'Recently updated',
   'name-asc': 'Name A – Z',
   'name-desc': 'Name Z – A',
-  'age-asc': 'Age (Youngest)',
-  'age-desc': 'Age (Oldest)'
+  'age-asc': 'Age (youngest first)',
+  'age-desc': 'Age (oldest first)'
 };
 
 const AGE_LABELS: Record<AgeFilter, string> = {
   all: 'All Ages',
   under30: 'Under 30',
   '30-50': '30 – 50',
-  '50-70': '50 – 70',
-  over70: 'Over 70'
+  '51-70': '51 – 70',
+  over71: '71+'
 };
 
-const LAST_APPT_LABELS: Record<LastApptFilter, string> = {
-  any: 'Any Time',
+const DATE_PRESET_LABELS: Record<Exclude<LastApptFilter, 'custom'>, string> = {
+  any: 'Any time',
   last7: 'Last 7 days',
+  last14: 'Last 14 days',
   last30: 'Last 30 days',
   last3months: 'Last 3 months'
+};
+
+const PRESET_MS: Record<Exclude<LastApptFilter, 'any' | 'custom'>, number> = {
+  last7: 7 * 86400000,
+  last14: 14 * 86400000,
+  last30: 30 * 86400000,
+  last3months: 90 * 86400000
 };
 
 const PAGE_SIZE = 20;
 
 export function PatientsPage() {
   const navigate = useNavigate();
+
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('recent');
   const [pendingSort, setPendingSort] = useState<SortKey>('recent');
   const [ageFilter, setAgeFilter] = useState<AgeFilter>('all');
   const [pendingAge, setPendingAge] = useState<AgeFilter>('all');
+
+  const [lastApptFilter, setLastApptFilter] = useState<LastApptFilter>('any');
+  const [lastApptFrom, setLastApptFrom] = useState('');
+  const [lastApptTo, setLastApptTo] = useState('');
+  const [pendingLastAppt, setPendingLastAppt] = useState<LastApptFilter>('any');
+  const [pendingLastApptFrom, setPendingLastApptFrom] = useState('');
+  const [pendingLastApptTo, setPendingLastApptTo] = useState('');
+
+  const [dateRegFilter, setDateRegFilter] = useState<DateRegFilter>('any');
+  const [dateRegFrom, setDateRegFrom] = useState('');
+  const [dateRegTo, setDateRegTo] = useState('');
+  const [pendingDateReg, setPendingDateReg] = useState<DateRegFilter>('any');
+  const [pendingDateRegFrom, setPendingDateRegFrom] = useState('');
+  const [pendingDateRegTo, setPendingDateRegTo] = useState('');
+
+  const [pharmacistFilter, setPharmacistFilter] = useState<string[]>([]);
+  const [pendingPharmacist, setPendingPharmacist] = useState<string[]>([]);
+
   const [filterOpen, setFilterOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
-  const [lastApptFilter, setLastApptFilter] = useState<LastApptFilter>('any');
-  const [pendingLastAppt, setPendingLastAppt] = useState<LastApptFilter>('any');
-  const [pharmacistFilter, setPharmacistFilter] = useState('');
-  const [pendingPharmacist, setPendingPharmacist] = useState('');
-
-  const filterRef = useRef<HTMLDivElement>(null);
+  const [isSortApplied, setIsSortApplied] = useState(false);
   const sortRef = useRef<HTMLDivElement>(null);
   const [page, setPage] = useState(1);
   const [referenceTime, setReferenceTime] = useState(0);
@@ -97,41 +121,85 @@ export function PatientsPage() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setPage(1);
-  }, [search, sortKey, ageFilter, lastApptFilter, pharmacistFilter]);
+  }, [search, sortKey, ageFilter, lastApptFilter, lastApptFrom, lastApptTo, dateRegFilter, dateRegFrom, dateRegTo, pharmacistFilter]);
 
-  // Close dropdowns on outside click
+  // Close sort dropdown on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (filterRef.current && !filterRef.current.contains(e.target as Node)) setFilterOpen(false);
       if (sortRef.current && !sortRef.current.contains(e.target as Node)) setSortOpen(false);
     }
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
+  // Sync pending state when opening the filter drawer
+  function openFilter() {
+    setPendingAge(ageFilter);
+    setPendingLastAppt(lastApptFilter);
+    setPendingLastApptFrom(lastApptFrom);
+    setPendingLastApptTo(lastApptTo);
+    setPendingDateReg(dateRegFilter);
+    setPendingDateRegFrom(dateRegFrom);
+    setPendingDateRegTo(dateRegTo);
+    setPendingPharmacist(pharmacistFilter);
+    setFilterOpen(true);
+    setSortOpen(false);
+  }
+
   function applyFilter() {
     setAgeFilter(pendingAge);
     setLastApptFilter(pendingLastAppt);
+    setLastApptFrom(pendingLastApptFrom);
+    setLastApptTo(pendingLastApptTo);
+    setDateRegFilter(pendingDateReg);
+    setDateRegFrom(pendingDateRegFrom);
+    setDateRegTo(pendingDateRegTo);
     setPharmacistFilter(pendingPharmacist);
     setFilterOpen(false);
   }
+
   function clearFilter() {
     setPendingAge('all');
-    setAgeFilter('all');
     setPendingLastAppt('any');
+    setPendingLastApptFrom('');
+    setPendingLastApptTo('');
+    setPendingDateReg('any');
+    setPendingDateRegFrom('');
+    setPendingDateRegTo('');
+    setPendingPharmacist([]);
+    setAgeFilter('all');
     setLastApptFilter('any');
-    setPendingPharmacist('');
-    setPharmacistFilter('');
+    setLastApptFrom('');
+    setLastApptTo('');
+    setDateRegFilter('any');
+    setDateRegFrom('');
+    setDateRegTo('');
+    setPharmacistFilter([]);
     setFilterOpen(false);
   }
+
   function applySort() {
     setSortKey(pendingSort);
+    setIsSortApplied(true);
     setSortOpen(false);
   }
+
   function clearSort() {
     setPendingSort('recent');
     setSortKey('recent');
+    setIsSortApplied(false);
     setSortOpen(false);
+  }
+
+  function togglePharmacist(name: string) {
+    setPendingPharmacist((prev) => (prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]));
+  }
+
+  function isDateInRange(dateStr: string, from: string, to: string): boolean {
+    const d = new Date(dateStr).getTime();
+    if (from && d < new Date(from).getTime()) return false;
+    if (to && d > new Date(to + 'T23:59:59').getTime()) return false;
+    return true;
   }
 
   const filtered = useMemo(() => {
@@ -139,19 +207,34 @@ export function PatientsPage() {
       .filter((p: IPatient) => {
         const q = search.toLowerCase();
         if (q && !p.fullName.toLowerCase().includes(q) && !p.phoneNumber?.toLowerCase().includes(q)) return false;
+
         if (ageFilter === 'under30' && p.age >= 30) return false;
         if (ageFilter === '30-50' && (p.age < 30 || p.age > 50)) return false;
-        if (ageFilter === '50-70' && (p.age < 50 || p.age > 70)) return false;
-        if (ageFilter === 'over70' && p.age <= 70) return false;
+        if (ageFilter === '51-70' && (p.age < 51 || p.age > 70)) return false;
+        if (ageFilter === 'over71' && p.age < 71) return false;
+
         if (lastApptFilter !== 'any') {
           const lastAppt = getLastAppointmentDate(p);
           if (!lastAppt) return false;
-          const diffMs = referenceTime - new Date(lastAppt).getTime();
-          if (lastApptFilter === 'last7' && diffMs > 7 * 86400000) return false;
-          if (lastApptFilter === 'last30' && diffMs > 30 * 86400000) return false;
-          if (lastApptFilter === 'last3months' && diffMs > 90 * 86400000) return false;
+          if (lastApptFilter === 'custom') {
+            if (!isDateInRange(lastAppt, lastApptFrom, lastApptTo)) return false;
+          } else {
+            const diffMs = referenceTime - new Date(lastAppt).getTime();
+            if (diffMs > PRESET_MS[lastApptFilter]) return false;
+          }
         }
-        if (pharmacistFilter && !p.pharmacistName.includes(pharmacistFilter)) return false;
+
+        if (dateRegFilter !== 'any') {
+          if (dateRegFilter === 'custom') {
+            if (!isDateInRange(p.createdAt, dateRegFrom, dateRegTo)) return false;
+          } else {
+            const diffMs = referenceTime - new Date(p.createdAt).getTime();
+            if (diffMs > PRESET_MS[dateRegFilter]) return false;
+          }
+        }
+
+        if (pharmacistFilter.length > 0 && !p.pharmacistName.some((n) => pharmacistFilter.includes(n))) return false;
+
         return true;
       })
       .sort((a: IPatient, b: IPatient) => {
@@ -160,15 +243,37 @@ export function PatientsPage() {
         if (sortKey === 'age-asc') return a.age - b.age;
         if (sortKey === 'age-desc') return b.age - a.age;
         if (sortKey === 'oldest') return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        if (sortKey === 'updated') return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       });
-  }, [patients, search, ageFilter, lastApptFilter, pharmacistFilter, sortKey, referenceTime]);
+  }, [
+    patients,
+    search,
+    ageFilter,
+    lastApptFilter,
+    lastApptFrom,
+    lastApptTo,
+    dateRegFilter,
+    dateRegFrom,
+    dateRegTo,
+    pharmacistFilter,
+    sortKey,
+    referenceTime
+  ]);
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  const filterActive = ageFilter !== 'all' || lastApptFilter !== 'any' || pharmacistFilter !== '';
-  const sortActive = sortKey !== 'recent';
+  const lastApptActive = lastApptFilter !== 'any' || !!lastApptFrom || !!lastApptTo;
+  const dateRegActive = dateRegFilter !== 'any' || !!dateRegFrom || !!dateRegTo;
+  const activeCount = (ageFilter !== 'all' ? 1 : 0) + (lastApptActive ? 1 : 0) + (dateRegActive ? 1 : 0) + (pharmacistFilter.length > 0 ? 1 : 0);
+  const filterActive = activeCount > 0;
+
+  const pendingLastApptActive = pendingLastAppt !== 'any' || !!pendingLastApptFrom || !!pendingLastApptTo;
+  const pendingDateRegActive = pendingDateReg !== 'any' || !!pendingDateRegFrom || !!pendingDateRegTo;
+  const pendingActiveCount =
+    (pendingAge !== 'all' ? 1 : 0) + (pendingLastApptActive ? 1 : 0) + (pendingDateRegActive ? 1 : 0) + (pendingPharmacist.length > 0 ? 1 : 0);
+  const sortActive = isSortApplied;
 
   const { data: user } = useQuery({ queryKey: queryKeys.me, queryFn: getMe, staleTime: Infinity, gcTime: Infinity });
 
@@ -205,81 +310,24 @@ export function PatientsPage() {
           <input
             className="search-input"
             type="text"
-            placeholder="Search patients by name..."
+            placeholder="Search by name or phone..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
 
         <div className="toolbar-right">
-          {/* Filter dropdown */}
-          <div className="dropdown-wrap" ref={filterRef}>
-            <button
-              className={`btn-ghost${filterActive ? ' btn-active' : ''}`}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', fontSize: 13 }}
-              onClick={() => {
-                setFilterOpen((o) => !o);
-                setSortOpen(false);
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
-              </svg>
-              Filter
-            </button>
-            <div className={`dropdown-panel${filterOpen ? ' open' : ''}`}>
-              <p className="dropdown-section-title">Age Group</p>
-              <div className="dropdown-options">
-                {(Object.keys(AGE_LABELS) as AgeFilter[]).map((key) => (
-                  <button key={key} className={`dropdown-option${pendingAge === key ? ' selected' : ''}`} onClick={() => setPendingAge(key)}>
-                    <span className="radio-dot" />
-                    {AGE_LABELS[key]}
-                  </button>
-                ))}
-              </div>
-
-              <p className="dropdown-section-title">Last Appointment</p>
-              <div className="dropdown-options">
-                {(Object.keys(LAST_APPT_LABELS) as LastApptFilter[]).map((key) => (
-                  <button
-                    key={key}
-                    className={`dropdown-option${pendingLastAppt === key ? ' selected' : ''}`}
-                    onClick={() => setPendingLastAppt(key)}
-                  >
-                    <span className="radio-dot" />
-                    {LAST_APPT_LABELS[key]}
-                  </button>
-                ))}
-              </div>
-
-              <p className="dropdown-section-title">Pharmacist</p>
-              <div className="dropdown-options">
-                <button className={`dropdown-option${pendingPharmacist === '' ? ' selected' : ''}`} onClick={() => setPendingPharmacist('')}>
-                  <span className="radio-dot" />
-                  All Pharmacists
-                </button>
-                {pharmacists.map((ph: IPharmacist) => (
-                  <button
-                    key={ph.id}
-                    className={`dropdown-option${pendingPharmacist === ph.name ? ' selected' : ''}`}
-                    onClick={() => setPendingPharmacist(ph.name)}
-                  >
-                    <span className="radio-dot" />
-                    {ph.name}
-                  </button>
-                ))}
-              </div>
-
-              <div className="dropdown-footer">
-                <button className="btn-ghost" onClick={clearFilter}>
-                  Clear
-                </button>
-                <button className="btn-save" onClick={applyFilter}>
-                  Apply
-                </button>
-              </div>
-            </div>
-          </div>
+          {/* Filter button */}
+          <button
+            className={`btn-ghost${filterActive ? ' btn-active' : ''}`}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', fontSize: 13 }}
+            onClick={openFilter}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+            </svg>
+            Filter{activeCount > 0 ? ` · ${activeCount}` : ''}
+          </button>
 
           {/* Sort dropdown */}
           <div className="dropdown-wrap" ref={sortRef}>
@@ -287,8 +335,8 @@ export function PatientsPage() {
               className={`btn-ghost${sortActive ? ' btn-active' : ''}`}
               style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', fontSize: 13 }}
               onClick={() => {
+                setPendingSort(sortKey);
                 setSortOpen((o) => !o);
-                setFilterOpen(false);
               }}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -297,15 +345,19 @@ export function PatientsPage() {
                 <line x1="21" y1="14" x2="3" y2="14" />
                 <line x1="21" y1="18" x2="7" y2="18" />
               </svg>
-              Sort
+              Sort{sortActive ? `: ${SORT_LABELS[sortKey]}` : ''}
             </button>
-            <div className={`dropdown-panel${sortOpen ? ' open' : ''}`}>
+            <div className={`dropdown-panel sort-dropdown${sortOpen ? ' open' : ''}`}>
               <p className="dropdown-section-title">Sort By</p>
               <div className="dropdown-options">
                 {(Object.keys(SORT_LABELS) as SortKey[]).map((key) => (
-                  <button key={key} className={`dropdown-option${pendingSort === key ? ' selected' : ''}`} onClick={() => setPendingSort(key)}>
-                    <span className="radio-dot" />
+                  <button
+                    key={key}
+                    className={`dropdown-option sort-option${pendingSort === key ? ' selected' : ''}`}
+                    onClick={() => setPendingSort(key)}
+                  >
                     {SORT_LABELS[key]}
+                    <span className={`radio-square${pendingSort === key ? ' checked' : ''}`} />
                   </button>
                 ))}
               </div>
@@ -322,14 +374,176 @@ export function PatientsPage() {
         </div>
       </div>
 
+      {/* Filter drawer overlay */}
+      <div className={`filter-overlay${filterOpen ? ' open' : ''}`} onClick={() => setFilterOpen(false)} />
+
+      {/* Filter drawer */}
+      <div className={`filter-drawer${filterOpen ? ' open' : ''}`}>
+        <div className="filter-drawer-header">
+          <div className="filter-drawer-title">
+            Filters
+            {pendingActiveCount > 0 && <span className="filter-active-badge">{pendingActiveCount} active</span>}
+          </div>
+          <button className="filter-close-btn" onClick={() => setFilterOpen(false)} aria-label="Close filters">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="filter-drawer-body">
+          {/* AGE GROUP */}
+          <section className="filter-section">
+            <p className="filter-section-label">Age Group</p>
+            <div className="filter-pills">
+              {(Object.keys(AGE_LABELS) as AgeFilter[])
+                .filter((k) => k !== 'all')
+                .map((key) => (
+                  <button
+                    key={key}
+                    className={`filter-pill${pendingAge === key ? ' active' : ''}`}
+                    onClick={() => setPendingAge(pendingAge === key ? 'all' : key)}
+                  >
+                    {AGE_LABELS[key]}
+                  </button>
+                ))}
+            </div>
+          </section>
+
+          <div className="filter-divider" />
+
+          {/* LAST APPOINTMENT */}
+          <section className="filter-section">
+            <p className="filter-section-label">Last Appointment</p>
+            <div className="filter-pills">
+              {(Object.keys(DATE_PRESET_LABELS) as Array<keyof typeof DATE_PRESET_LABELS>).map((key) => (
+                <button
+                  key={key}
+                  className={`filter-pill${pendingLastAppt === key ? ' active' : ''}`}
+                  onClick={() => {
+                    setPendingLastAppt(key);
+                    setPendingLastApptFrom('');
+                    setPendingLastApptTo('');
+                  }}
+                >
+                  {DATE_PRESET_LABELS[key]}
+                </button>
+              ))}
+            </div>
+            <div className="filter-date-range">
+              <div>
+                <label>From</label>
+                <input
+                  type="date"
+                  value={pendingLastApptFrom}
+                  onChange={(e) => {
+                    setPendingLastApptFrom(e.target.value);
+                    if (e.target.value) setPendingLastAppt('custom');
+                  }}
+                />
+              </div>
+              <div>
+                <label>To</label>
+                <input
+                  type="date"
+                  value={pendingLastApptTo}
+                  onChange={(e) => {
+                    setPendingLastApptTo(e.target.value);
+                    if (e.target.value) setPendingLastAppt('custom');
+                  }}
+                />
+              </div>
+            </div>
+          </section>
+
+          <div className="filter-divider" />
+
+          {/* DATE REGISTERED */}
+          <section className="filter-section">
+            <p className="filter-section-label">Date Registered</p>
+            <div className="filter-pills">
+              {(Object.keys(DATE_PRESET_LABELS) as Array<keyof typeof DATE_PRESET_LABELS>).map((key) => (
+                <button
+                  key={key}
+                  className={`filter-pill${pendingDateReg === key ? ' active' : ''}`}
+                  onClick={() => {
+                    setPendingDateReg(key);
+                    setPendingDateRegFrom('');
+                    setPendingDateRegTo('');
+                  }}
+                >
+                  {DATE_PRESET_LABELS[key]}
+                </button>
+              ))}
+            </div>
+            <div className="filter-date-range">
+              <div>
+                <label>From</label>
+                <input
+                  type="date"
+                  value={pendingDateRegFrom}
+                  onChange={(e) => {
+                    setPendingDateRegFrom(e.target.value);
+                    if (e.target.value) setPendingDateReg('custom');
+                  }}
+                />
+              </div>
+              <div>
+                <label>To</label>
+                <input
+                  type="date"
+                  value={pendingDateRegTo}
+                  onChange={(e) => {
+                    setPendingDateRegTo(e.target.value);
+                    if (e.target.value) setPendingDateReg('custom');
+                  }}
+                />
+              </div>
+            </div>
+          </section>
+
+          <div className="filter-divider" />
+
+          {/* PHARMACIST */}
+          <section className="filter-section">
+            <p className="filter-section-label">Pharmacist</p>
+            <p className="filter-section-sub">Select one or more to narrow results</p>
+            <div className="filter-pills">
+              <button className={`filter-pill${pendingPharmacist.length === 0 ? ' active' : ''}`} onClick={() => setPendingPharmacist([])}>
+                All Pharmacists
+              </button>
+              {pharmacists.map((ph: IPharmacist) => (
+                <button
+                  key={ph.id}
+                  className={`filter-pill${pendingPharmacist.includes(ph.name) ? ' active' : ''}`}
+                  onClick={() => togglePharmacist(ph.name)}
+                >
+                  {ph.name}
+                </button>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        <div className="filter-drawer-footer">
+          <button className="btn-ghost" onClick={clearFilter}>
+            Reset
+          </button>
+          <button className="btn-save" onClick={applyFilter}>
+            Apply Filters
+          </button>
+        </div>
+      </div>
+
       {isLoading ? (
         <div className="spinner-wrap">
           <div className="spinner" />
         </div>
       ) : filtered.length === 0 ? (
         <div className="empty-state">
-          {search ? (
-            <p>No patients match your search.</p>
+          {search || filterActive ? (
+            <p>No patients match your search or filters.</p>
           ) : (
             <>
               <p className="empty-state-headline">No patients yet</p>
