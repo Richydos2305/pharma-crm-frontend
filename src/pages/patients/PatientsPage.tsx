@@ -132,6 +132,12 @@ export function PatientsPage() {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
+  // Hide bottom nav on mobile while filter drawer is open
+  useEffect(() => {
+    document.body.classList.toggle('filter-drawer-open', filterOpen);
+    return () => document.body.classList.remove('filter-drawer-open');
+  }, [filterOpen]);
+
   // Sync pending state when opening the filter drawer
   function openFilter() {
     setPendingAge(ageFilter);
