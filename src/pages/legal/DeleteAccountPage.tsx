@@ -33,17 +33,13 @@ export function DeleteAccountPage() {
         <ul style={styles.ul}>
           <li style={styles.li}>Your user account information — name, email address, phone number, and password.</li>
           <li style={styles.li}>Pharmacy profile information associated with your account, such as pharmacy name and logo.</li>
-          <li style={styles.li}>
-            Patient records created under your account, including custom form data, medical visit notes, and prescriptions, unless retention is
-            required as described below.
-          </li>
+          <li style={styles.li}>Patient records created under your account, including custom form data, medical visit notes, and prescriptions.</li>
         </ul>
 
         <h2 style={styles.h2}>What may be retained</h2>
         <p style={styles.p}>
-          We may retain certain information for a limited period after deletion where required by law, to resolve disputes, prevent fraud, or meet
-          regulatory record-keeping obligations relevant to pharmacy practice. Any retained data is kept only as long as necessary for these purposes
-          and is not used for any other purpose.
+          We do not keep backup copies or retain your data beyond the deletion process. The only exception is if we are legally required to retain
+          specific information, for example in response to a valid court order or law enforcement request.
         </p>
 
         <p style={styles.p}>
