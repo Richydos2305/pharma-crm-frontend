@@ -17,6 +17,7 @@ import { UpdatePatientPage } from './pages/patients/UpdatePatientPage';
 import { ProfilePage } from './pages/profile/ProfilePage';
 import { PharmacistsPage } from './pages/pharmacists/PharmacistsPage';
 import { FormBuilderPage } from './pages/patients/FormBuilderPage';
+import { PrivacyPolicyPage } from './pages/legal/PrivacyPolicyPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -31,6 +32,7 @@ const router = createBrowserRouter([
   { path: '/verify-email', element: <VerifyEmailPage /> },
   { path: '/forgot-password', element: <ForgotPasswordPage /> },
   { path: '/reset-password', element: <ResetPasswordPage /> },
+  { path: '/privacy', element: <PrivacyPolicyPage /> },
   {
     path: '/dashboard',
     element: (
