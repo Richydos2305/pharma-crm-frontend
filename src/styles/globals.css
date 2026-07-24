@@ -1676,6 +1676,49 @@ body.sidebar-collapsed .main-area {
   background: var(--active-nav-bg);
 }
 
+/* ─── Branch Management ─── */
+.branch-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.branch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  border-radius: 8px;
+  background: var(--surface-primary);
+  gap: 6px;
+}
+.branch-row-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--surface-inverse);
+}
+.branch-row-delete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--fg-muted);
+  cursor: pointer;
+  padding: 2px;
+}
+.branch-row-delete:hover {
+  color: #ef4444;
+}
+.branch-add-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+}
+.branch-add-row .form-input {
+  flex: 1;
+}
+
 /* ─── Profile Intake Section ─── */
 .profile-intake-section {
   display: flex;

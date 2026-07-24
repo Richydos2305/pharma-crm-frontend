@@ -36,6 +36,8 @@ export function ProfilePage() {
   const [logoUploading, setLogoUploading] = useState(false);
   const [logoError, setLogoError] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
+  const [branches, setBranches] = useState<string[]>([]);
+  const [newBranch, setNewBranch] = useState('');
   const logoInputRef = useRef<HTMLInputElement>(null);
 
   async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -80,8 +82,21 @@ export function ProfilePage() {
 
   function startEditPharmacy() {
     setCompanyName(user?.companyName ?? '');
+    setBranches(user?.branches ?? []);
+    setNewBranch('');
     setPharmacyError('');
     setEditingPharmacy(true);
+  }
+
+  function addBranch() {
+    const trimmed = newBranch.trim();
+    if (!trimmed || branches.includes(trimmed)) return;
+    setBranches((prev) => [...prev, trimmed]);
+    setNewBranch('');
+  }
+
+  function removeBranch(branch: string) {
+    setBranches((prev) => prev.filter((b) => b !== branch));
   }
 
   async function handleSavePharmacy(e: React.FormEvent) {
@@ -89,10 +104,10 @@ export function ProfilePage() {
     setPharmacyError('');
     setSaveLoading(true);
     try {
-      await updateMutation.mutateAsync({ companyName });
+      await updateMutation.mutateAsync({ companyName, branches });
       setEditingPharmacy(false);
-    } catch {
-      // error handled in mutation onError
+    } catch (err) {
+      setPharmacyError(getApiErrorMessage(err));
     } finally {
       setSaveLoading(false);
     }
@@ -279,18 +294,70 @@ export function ProfilePage() {
                     <label className="form-label">Pharmacy Name</label>
                     <input className="form-input" type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
                   </div>
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label">Branches</label>
+                    <div className="branch-list">
+                      {branches.map((branch) => (
+                        <div className="branch-row" key={branch}>
+                          <span className="branch-row-name">{branch}</span>
+                          <button type="button" className="branch-row-delete" aria-label={`Remove ${branch}`} onClick={() => removeBranch(branch)}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <polyline points="3 6 5 6 21 6" />
+                              <path d="M19 6l-1 14H6L5 6" />
+                              <path d="M10 11v6M14 11v6" />
+                              <path d="M9 6V4h6v2" />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="branch-add-row">
+                      <input
+                        className="form-input"
+                        type="text"
+                        placeholder="e.g. North Wing"
+                        value={newBranch}
+                        onChange={(e) => setNewBranch(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            addBranch();
+                          }
+                        }}
+                      />
+                      <button type="button" className="btn-save" style={{ margin: 0 }} onClick={addBranch}>
+                        Add
+                      </button>
+                    </div>
+                  </div>
                 </>
               ) : (
-                <div className="pharmacy-card-top">
-                  <div className="logo-section">
-                    <span className="field-label">Company Logo</span>
-                    <div className="logo-preview">{user?.companyLogo ? <img src={user.companyLogo} alt="Logo" /> : companyInitials}</div>
+                <>
+                  <div className="pharmacy-card-top">
+                    <div className="logo-section">
+                      <span className="field-label">Company Logo</span>
+                      <div className="logo-preview">{user?.companyLogo ? <img src={user.companyLogo} alt="Logo" /> : companyInitials}</div>
+                    </div>
+                    <div className="pharmacy-name-block">
+                      <span className="field-label">Pharmacy Name</span>
+                      <span className="field-value">{user?.companyName ?? '—'}</span>
+                    </div>
                   </div>
-                  <div className="pharmacy-name-block">
-                    <span className="field-label">Pharmacy Name</span>
-                    <span className="field-value">{user?.companyName ?? '—'}</span>
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <span className="field-label">Branches</span>
+                    {user?.branches && user.branches.length > 0 ? (
+                      <div className="branch-list" style={{ marginTop: 8 }}>
+                        {user.branches.map((branch) => (
+                          <div className="branch-row" key={branch}>
+                            <span className="branch-row-name">{branch}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="field-value">—</div>
+                    )}
                   </div>
-                </div>
+                </>
               )}
 
               {/* Patient Intake Form shortcut */}

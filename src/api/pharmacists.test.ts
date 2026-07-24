@@ -32,6 +32,22 @@ describe('normalize', () => {
 
     expect(result.phoneNumber).toBeUndefined();
   });
+
+  it('should preserve branch when present on the raw object', async () => {
+    server.use(http.post(`${BASE}/api/pharmacists`, () => HttpResponse.json({ data: { _id: 'ph-3', name: 'Dr. Cara', branch: 'Downtown' } })));
+
+    const result = await createPharmacist({ name: 'Dr. Cara', branch: 'Downtown' });
+
+    expect(result.branch).toBe('Downtown');
+  });
+
+  it('should return undefined for branch when it is absent from the raw object', async () => {
+    server.use(http.post(`${BASE}/api/pharmacists`, () => HttpResponse.json({ data: { _id: 'ph-4', name: 'Dr. Dan' } })));
+
+    const result = await createPharmacist({ name: 'Dr. Dan' });
+
+    expect(result.branch).toBeUndefined();
+  });
 });
 
 // ─── listPharmacists ──────────────────────────────────────────────────────────
@@ -124,6 +140,18 @@ describe('createPharmacist', () => {
       response: { status: 422 }
     });
   });
+
+  it('should reject with the "invalid branch" message from the server', async () => {
+    server.use(
+      http.post(`${BASE}/api/pharmacists`, () =>
+        HttpResponse.json({ message: 'Branch "Ghost Wing" is not a valid branch for this user' }, { status: 400 })
+      )
+    );
+
+    await expect(createPharmacist({ name: 'Dr. Ada', branch: 'Ghost Wing' })).rejects.toMatchObject({
+      response: { status: 400, data: { message: 'Branch "Ghost Wing" is not a valid branch for this user' } }
+    });
+  });
 });
 
 // ─── updatePharmacist ─────────────────────────────────────────────────────────
@@ -162,6 +190,34 @@ describe('updatePharmacist', () => {
 
     await expect(updatePharmacist('ph-1', { name: 'Ghost' })).rejects.toMatchObject({
       response: { status: 404 }
+    });
+  });
+
+  it('should PUT branch in the payload and return it normalised', async () => {
+    let capturedBody: unknown;
+
+    server.use(
+      http.put(`${BASE}/api/pharmacists/ph-1`, async ({ request }) => {
+        capturedBody = await request.json();
+        return HttpResponse.json({ data: { _id: 'ph-1', name: 'Dr. Ada', branch: 'North Wing' } });
+      })
+    );
+
+    const result = await updatePharmacist('ph-1', { name: 'Dr. Ada', branch: 'North Wing' });
+
+    expect(capturedBody).toEqual({ name: 'Dr. Ada', branch: 'North Wing' });
+    expect(result.branch).toBe('North Wing');
+  });
+
+  it('should reject with the "branch still assigned" message from the server', async () => {
+    server.use(
+      http.put(`${BASE}/api/pharmacists/ph-1`, () =>
+        HttpResponse.json({ message: 'Cannot remove branch(es) still assigned to a pharmacist: Downtown' }, { status: 400 })
+      )
+    );
+
+    await expect(updatePharmacist('ph-1', { branch: '' })).rejects.toMatchObject({
+      response: { status: 400, data: { message: 'Cannot remove branch(es) still assigned to a pharmacist: Downtown' } }
     });
   });
 });
