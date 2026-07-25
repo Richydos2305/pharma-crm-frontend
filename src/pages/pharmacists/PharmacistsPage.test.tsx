@@ -1,9 +1,9 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { listPharmacists } from '../../api/pharmacists';
+import { listPharmacists, createPharmacist, updatePharmacist } from '../../api/pharmacists';
 import { listPatients } from '../../api/patients';
 import { getMe } from '../../api/users';
 import { PharmacistsPage } from './PharmacistsPage';
@@ -52,7 +52,8 @@ beforeEach(() => {
     _id: 'user-1',
     email: 'test@test.com',
     fullName: 'Test User',
-    role: 'admin'
+    role: 'admin',
+    branches: ['Downtown', 'North Wing']
   });
 });
 
@@ -86,5 +87,108 @@ describe('empty state when no pharmacists are registered', () => {
 
     expect(container.querySelector('.modal-overlay')).toHaveClass('open');
     expect(screen.getByRole('heading', { name: 'Add Pharmacist' })).toBeInTheDocument();
+  });
+});
+
+// ─── Add Pharmacist modal — branch field ─────────────────────────────────────
+
+describe('Add Pharmacist modal branch field', () => {
+  function openAddModal(container: HTMLElement) {
+    const overlays = container.querySelectorAll('.modal-overlay');
+    return within(overlays[0] as HTMLElement);
+  }
+
+  it('should populate the branch select with options from the current user’s branches', async () => {
+    const user = userEvent.setup();
+    const { container } = renderPharmacistsPage();
+
+    await user.click(await screen.findByRole('button', { name: '+ Add a pharmacist' }));
+
+    const modal = openAddModal(container);
+    const select = modal.getByLabelText('Branch') as HTMLSelectElement;
+    const optionLabels = Array.from(select.options).map((o) => o.textContent);
+    expect(optionLabels).toEqual(['Select a branch', 'Downtown', 'North Wing']);
+  });
+
+  it('should submit the selected branch when saving a new pharmacist', async () => {
+    const user = userEvent.setup();
+    vi.mocked(createPharmacist).mockResolvedValue({ id: 'ph-1', name: 'Dr. Ada', branch: 'Downtown' });
+    const { container } = renderPharmacistsPage();
+
+    await user.click(await screen.findByRole('button', { name: '+ Add a pharmacist' }));
+    const modal = openAddModal(container);
+    await user.type(modal.getByLabelText('Full Name'), 'Dr. Ada');
+    await user.selectOptions(modal.getByLabelText('Branch'), 'Downtown');
+    await user.click(modal.getByRole('button', { name: 'Save Pharmacist' }));
+
+    await waitFor(() => expect(createPharmacist).toHaveBeenCalledWith({ name: 'Dr. Ada', phoneNumber: undefined, branch: 'Downtown' }));
+  });
+
+  it('should surface the server’s invalid-branch error message in the modal', async () => {
+    const user = userEvent.setup();
+    vi.mocked(createPharmacist).mockRejectedValue({
+      isAxiosError: true,
+      response: { data: { message: 'Branch "Ghost Wing" is not a valid branch for this user' } }
+    });
+    const { container } = renderPharmacistsPage();
+
+    await user.click(await screen.findByRole('button', { name: '+ Add a pharmacist' }));
+    const modal = openAddModal(container);
+    await user.type(modal.getByLabelText('Full Name'), 'Dr. Ada');
+    await user.click(modal.getByRole('button', { name: 'Save Pharmacist' }));
+
+    await waitFor(() => expect(modal.getByText('Branch "Ghost Wing" is not a valid branch for this user')).toBeInTheDocument());
+  });
+});
+
+// ─── Edit Pharmacist modal — branch field ────────────────────────────────────
+
+describe('Edit Pharmacist modal branch field', () => {
+  beforeEach(() => {
+    vi.mocked(listPharmacists).mockResolvedValue([{ id: 'ph-1', name: 'Dr. Ada', phoneNumber: '0801', branch: 'North Wing' }]);
+  });
+
+  function openEditModal(container: HTMLElement) {
+    const overlays = container.querySelectorAll('.modal-overlay');
+    return within(overlays[1] as HTMLElement);
+  }
+
+  it('should pre-select the pharmacist’s current branch', async () => {
+    const user = userEvent.setup();
+    const { container } = renderPharmacistsPage();
+
+    await user.click(await screen.findByRole('button', { name: 'Edit' }));
+
+    const modal = openEditModal(container);
+    const select = modal.getByLabelText('Branch') as HTMLSelectElement;
+    expect(select.value).toBe('North Wing');
+  });
+
+  it('should submit the updated branch when saving an edited pharmacist', async () => {
+    const user = userEvent.setup();
+    vi.mocked(updatePharmacist).mockResolvedValue({ id: 'ph-1', name: 'Dr. Ada', branch: 'Downtown' });
+    const { container } = renderPharmacistsPage();
+
+    await user.click(await screen.findByRole('button', { name: 'Edit' }));
+    const modal = openEditModal(container);
+    await user.selectOptions(modal.getByLabelText('Branch'), 'Downtown');
+    await user.click(modal.getByRole('button', { name: 'Save Pharmacist' }));
+
+    await waitFor(() => expect(updatePharmacist).toHaveBeenCalledWith('ph-1', { name: 'Dr. Ada', phoneNumber: '0801', branch: 'Downtown' }));
+  });
+
+  it('should surface the server’s branch-still-assigned error message in the modal', async () => {
+    const user = userEvent.setup();
+    vi.mocked(updatePharmacist).mockRejectedValue({
+      isAxiosError: true,
+      response: { data: { message: 'Cannot remove branch(es) still assigned to a pharmacist: North Wing' } }
+    });
+    const { container } = renderPharmacistsPage();
+
+    await user.click(await screen.findByRole('button', { name: 'Edit' }));
+    const modal = openEditModal(container);
+    await user.click(modal.getByRole('button', { name: 'Save Pharmacist' }));
+
+    await waitFor(() => expect(modal.getByText('Cannot remove branch(es) still assigned to a pharmacist: North Wing')).toBeInTheDocument());
   });
 });
