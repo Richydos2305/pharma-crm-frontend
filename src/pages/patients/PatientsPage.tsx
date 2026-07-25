@@ -94,6 +94,9 @@ export function PatientsPage() {
   const [pharmacistFilter, setPharmacistFilter] = useState<string[]>([]);
   const [pendingPharmacist, setPendingPharmacist] = useState<string[]>([]);
 
+  const [branchFilter, setBranchFilter] = useState<string[]>([]);
+  const [pendingBranch, setPendingBranch] = useState<string[]>([]);
+
   const [filterOpen, setFilterOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
   const [isSortApplied, setIsSortApplied] = useState(false);
@@ -121,7 +124,7 @@ export function PatientsPage() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setPage(1);
-  }, [search, sortKey, ageFilter, lastApptFilter, lastApptFrom, lastApptTo, dateRegFilter, dateRegFrom, dateRegTo, pharmacistFilter]);
+  }, [search, sortKey, ageFilter, lastApptFilter, lastApptFrom, lastApptTo, dateRegFilter, dateRegFrom, dateRegTo, pharmacistFilter, branchFilter]);
 
   // Close sort dropdown on outside click
   useEffect(() => {
@@ -148,6 +151,7 @@ export function PatientsPage() {
     setPendingDateRegFrom(dateRegFrom);
     setPendingDateRegTo(dateRegTo);
     setPendingPharmacist(pharmacistFilter);
+    setPendingBranch(branchFilter);
     setFilterOpen(true);
     setSortOpen(false);
   }
@@ -161,6 +165,7 @@ export function PatientsPage() {
     setDateRegFrom(pendingDateRegFrom);
     setDateRegTo(pendingDateRegTo);
     setPharmacistFilter(pendingPharmacist);
+    setBranchFilter(pendingBranch);
     setFilterOpen(false);
   }
 
@@ -173,6 +178,7 @@ export function PatientsPage() {
     setPendingDateRegFrom('');
     setPendingDateRegTo('');
     setPendingPharmacist([]);
+    setPendingBranch([]);
     setAgeFilter('all');
     setLastApptFilter('any');
     setLastApptFrom('');
@@ -181,6 +187,7 @@ export function PatientsPage() {
     setDateRegFrom('');
     setDateRegTo('');
     setPharmacistFilter([]);
+    setBranchFilter([]);
     setFilterOpen(false);
   }
 
@@ -201,12 +208,24 @@ export function PatientsPage() {
     setPendingPharmacist((prev) => (prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]));
   }
 
+  function toggleBranch(name: string) {
+    setPendingBranch((prev) => (prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]));
+  }
+
   function isDateInRange(dateStr: string, from: string, to: string): boolean {
     const d = new Date(dateStr).getTime();
     if (from && d < new Date(from).getTime()) return false;
     if (to && d > new Date(to + 'T23:59:59').getTime()) return false;
     return true;
   }
+
+  const pharmacistBranch = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const ph of pharmacists) {
+      if (ph.branch) map.set(ph.name, ph.branch);
+    }
+    return map;
+  }, [pharmacists]);
 
   const filtered = useMemo(() => {
     return patients
@@ -241,6 +260,14 @@ export function PatientsPage() {
 
         if (pharmacistFilter.length > 0 && !p.pharmacistName.some((n) => pharmacistFilter.includes(n))) return false;
 
+        if (branchFilter.length > 0) {
+          const matches = p.pharmacistName.some((n) => {
+            const branch = pharmacistBranch.get(n);
+            return branch && branchFilter.includes(branch);
+          });
+          if (!matches) return false;
+        }
+
         return true;
       })
       .sort((a: IPatient, b: IPatient) => {
@@ -263,6 +290,8 @@ export function PatientsPage() {
     dateRegFrom,
     dateRegTo,
     pharmacistFilter,
+    branchFilter,
+    pharmacistBranch,
     sortKey,
     referenceTime
   ]);
@@ -272,13 +301,22 @@ export function PatientsPage() {
 
   const lastApptActive = lastApptFilter !== 'any' || !!lastApptFrom || !!lastApptTo;
   const dateRegActive = dateRegFilter !== 'any' || !!dateRegFrom || !!dateRegTo;
-  const activeCount = (ageFilter !== 'all' ? 1 : 0) + (lastApptActive ? 1 : 0) + (dateRegActive ? 1 : 0) + (pharmacistFilter.length > 0 ? 1 : 0);
+  const activeCount =
+    (ageFilter !== 'all' ? 1 : 0) +
+    (lastApptActive ? 1 : 0) +
+    (dateRegActive ? 1 : 0) +
+    (pharmacistFilter.length > 0 ? 1 : 0) +
+    (branchFilter.length > 0 ? 1 : 0);
   const filterActive = activeCount > 0;
 
   const pendingLastApptActive = pendingLastAppt !== 'any' || !!pendingLastApptFrom || !!pendingLastApptTo;
   const pendingDateRegActive = pendingDateReg !== 'any' || !!pendingDateRegFrom || !!pendingDateRegTo;
   const pendingActiveCount =
-    (pendingAge !== 'all' ? 1 : 0) + (pendingLastApptActive ? 1 : 0) + (pendingDateRegActive ? 1 : 0) + (pendingPharmacist.length > 0 ? 1 : 0);
+    (pendingAge !== 'all' ? 1 : 0) +
+    (pendingLastApptActive ? 1 : 0) +
+    (pendingDateRegActive ? 1 : 0) +
+    (pendingPharmacist.length > 0 ? 1 : 0) +
+    (pendingBranch.length > 0 ? 1 : 0);
   const sortActive = isSortApplied;
 
   const { data: user } = useQuery({ queryKey: queryKeys.me, queryFn: getMe, staleTime: Infinity, gcTime: Infinity });
@@ -506,6 +544,24 @@ export function PatientsPage() {
                   }}
                 />
               </div>
+            </div>
+          </section>
+
+          <div className="filter-divider" />
+
+          {/* BRANCH */}
+          <section className="filter-section">
+            <p className="filter-section-label">Branch</p>
+            <p className="filter-section-sub">Select one or more to narrow results</p>
+            <div className="filter-pills">
+              <button className={`filter-pill${pendingBranch.length === 0 ? ' active' : ''}`} onClick={() => setPendingBranch([])}>
+                All Branches
+              </button>
+              {(user?.branches ?? []).map((b) => (
+                <button key={b} className={`filter-pill${pendingBranch.includes(b) ? ' active' : ''}`} onClick={() => toggleBranch(b)}>
+                  {b}
+                </button>
+              ))}
             </div>
           </section>
 

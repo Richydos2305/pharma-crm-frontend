@@ -28,20 +28,36 @@ interface PharmacistModalProps {
   subtitle: string;
   initialName?: string;
   initialPhone?: string;
+  initialBranch?: string;
+  branches: string[];
   loading: boolean;
   error?: string;
   onClose: () => void;
-  onSave: (name: string, phoneNumber: string) => Promise<void>;
+  onSave: (name: string, phoneNumber: string, branch: string) => Promise<void>;
 }
 
-function PharmacistModal({ open, title, subtitle, initialName = '', initialPhone = '', loading, error, onClose, onSave }: PharmacistModalProps) {
+function PharmacistModal({
+  open,
+  title,
+  subtitle,
+  initialName = '',
+  initialPhone = '',
+  initialBranch = '',
+  branches,
+  loading,
+  error,
+  onClose,
+  onSave
+}: PharmacistModalProps) {
   const [name, setName] = useState(initialName);
   const [phoneNumber, setPhoneNumber] = useState(initialPhone);
+  const [branch, setBranch] = useState(initialBranch);
 
   useEffect(() => {
     if (open) {
       setName(initialName);
       setPhoneNumber(initialPhone);
+      setBranch(initialBranch);
     }
     // Only reset when the modal opens, not on every prop change
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -49,7 +65,7 @@ function PharmacistModal({ open, title, subtitle, initialName = '', initialPhone
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    await onSave(name, phoneNumber);
+    await onSave(name, phoneNumber, branch);
   }
 
   return (
@@ -86,6 +102,24 @@ function PharmacistModal({ open, title, subtitle, initialName = '', initialPhone
                 onChange={(e) => setName(e.target.value)}
                 required
               />
+            </div>
+            <div className="form-group" style={{ margin: 0 }}>
+              <label className="form-label" htmlFor="ph-branch">
+                Branch
+              </label>
+              <select
+                id="ph-branch"
+                className={`form-select${!branch ? ' placeholder' : ''}`}
+                value={branch}
+                onChange={(e) => setBranch(e.target.value)}
+              >
+                <option value="">Select a branch</option>
+                {branches.map((b) => (
+                  <option key={b} value={b}>
+                    {b}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="form-group" style={{ margin: 0 }}>
               <label className="form-label" htmlFor="ph-phone">
@@ -141,7 +175,7 @@ export function PharmacistsPage() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (payload: { name: string; phoneNumber?: string }) => createPharmacist(payload),
+    mutationFn: (payload: { name: string; phoneNumber?: string; branch?: string }) => createPharmacist(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.pharmacists });
       queryClient.invalidateQueries({ queryKey: queryKeys.settings });
@@ -154,7 +188,8 @@ export function PharmacistsPage() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, name, phoneNumber }: { id: string; name: string; phoneNumber?: string }) => updatePharmacist(id, { name, phoneNumber }),
+    mutationFn: ({ id, name, phoneNumber, branch }: { id: string; name: string; phoneNumber?: string; branch?: string }) =>
+      updatePharmacist(id, { name, phoneNumber, branch }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.pharmacists });
       setEditTarget(null);
@@ -172,15 +207,23 @@ export function PharmacistsPage() {
     }
   });
 
-  async function handleAdd(name: string, phoneNumber: string) {
+  async function handleAdd(name: string, phoneNumber: string, branch: string) {
     setModalError('');
-    await createMutation.mutateAsync({ name, phoneNumber: phoneNumber || undefined });
+    try {
+      await createMutation.mutateAsync({ name, phoneNumber: phoneNumber || undefined, branch: branch || undefined });
+    } catch {
+      // error handled in mutation onError
+    }
   }
 
-  async function handleEdit(name: string, phoneNumber: string) {
+  async function handleEdit(name: string, phoneNumber: string, branch: string) {
     if (!editTarget) return;
     setModalError('');
-    await updateMutation.mutateAsync({ id: editTarget.id, name, phoneNumber: phoneNumber || undefined });
+    try {
+      await updateMutation.mutateAsync({ id: editTarget.id, name, phoneNumber: phoneNumber || undefined, branch: branch || undefined });
+    } catch {
+      // error handled in mutation onError
+    }
   }
 
   const mobileTopBar = (
@@ -302,6 +345,7 @@ export function PharmacistsPage() {
         open={addOpen}
         title="Add Pharmacist"
         subtitle="Add a new pharmacist to your team"
+        branches={user?.branches ?? []}
         loading={createMutation.isPending}
         error={modalError}
         onClose={() => {
@@ -317,6 +361,8 @@ export function PharmacistsPage() {
         subtitle="Update pharmacist details"
         initialName={editTarget?.name ?? ''}
         initialPhone={editTarget?.phoneNumber ?? ''}
+        initialBranch={editTarget?.branch ?? ''}
+        branches={user?.branches ?? []}
         loading={updateMutation.isPending}
         error={modalError}
         onClose={() => {
