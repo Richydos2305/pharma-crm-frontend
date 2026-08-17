@@ -9,7 +9,7 @@ A CRM built for independent pharmacies and pharmacy chains — manage patients, 
 
 ## Demo
 
-🔗 **Live app:** [pharmact.vercel.app](https://pharmact.vercel.app)
+🔗 **Live web app:** [pharmact.vercel.app](https://pharmact.vercel.app)
 
 ![Demo walkthrough](docs/demo.gif)
 
