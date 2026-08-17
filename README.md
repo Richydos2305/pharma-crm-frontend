@@ -1,4 +1,4 @@
-# Pharmact
+# PharmaPRS
 
 A CRM built for independent pharmacies and pharmacy chains — manage patients, pharmacists, and multi-branch operations from one dashboard.
 
