@@ -2,10 +2,10 @@
 
 A CRM built for independent pharmacies and pharmacy chains — manage patients, pharmacists, and multi-branch operations from one dashboard.
 
-![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite-8-646CFF?style=for-the-badge&logo=vite&logoColor=white)
-![Live Demo](https://img.shields.io/badge/Live%20Demo-pharmact.vercel.app-000000?style=for-the-badge&logo=vercel&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?style=flat&logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat&logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-8-646CFF?style=flat&logo=vite&logoColor=white)
+![Live Demo](https://img.shields.io/badge/Live%20Demo-pharmact.vercel.app-000000?style=flat&logo=vercel&logoColor=white)
 
 ## Demo
 
